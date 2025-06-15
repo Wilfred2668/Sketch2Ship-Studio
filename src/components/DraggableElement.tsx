@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Element } from '../types/builder';
+import { AccordionEditor } from './AccordionEditor';
 
 interface DraggableElementProps {
   element: Element;
@@ -233,6 +234,29 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
           const [title, content] = section.split('|');
           return { title: title?.trim() || 'Section', content: content?.trim() || 'Content' };
         });
+        
+        if (isEditing) {
+          return (
+            <div className="p-4 bg-white border border-gray-300 rounded-lg">
+              <AccordionEditor
+                sections={sections}
+                onUpdate={(newSections) => {
+                  const newContent = newSections.map(s => `${s.title}|${s.content}`).join('\n');
+                  onUpdate({ content: newContent });
+                }}
+              />
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          );
+        }
+        
         return (
           <div {...commonProps} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
             {sections.map((section, index) => (
@@ -254,6 +278,29 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
               </div>
             ))}
           </div>
+        );
+      case 'navigation':
+        const navItems = element.content.split('\n').filter(item => item.trim()).map(item => {
+          const [label, url] = item.split('|');
+          return { label: label?.trim() || 'Link', url: url?.trim() || '#' };
+        });
+        return (
+          <nav {...commonProps} className="bg-white border-b border-gray-200 w-full">
+            <div className="flex items-center justify-between px-6 py-3">
+              <div className="flex items-center space-x-8">
+                {navItems.map((item, index) => (
+                  <a
+                    key={index}
+                    href={item.url}
+                    onClick={e => e.preventDefault()}
+                    className="text-gray-700 hover:text-gray-900 font-medium"
+                  >
+                    {item.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </nav>
         );
       case 'divider':
         return (

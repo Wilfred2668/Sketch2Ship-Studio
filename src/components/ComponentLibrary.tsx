@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Type, Heading, MousePointer, Image, Plus, List, Link, Video, Star, Space, Quote, PlayCircle, ChevronDown } from 'lucide-react';
+import { Type, Heading, MousePointer, Image, Plus, List, Link, Video, Star, Space, Quote, PlayCircle, ChevronDown, Menu } from 'lucide-react';
 import { Element } from '../types/builder';
 
 interface ComponentLibraryProps {
@@ -14,6 +14,7 @@ export const ComponentLibrary: React.FC<ComponentLibraryProps> = ({ onAddElement
     { type: 'heading' as const, icon: Heading, label: 'Heading', color: 'from-blue-500 to-blue-600' },
     { type: 'button' as const, icon: MousePointer, label: 'Button', color: 'from-green-500 to-green-600' },
     { type: 'link' as const, icon: Link, label: 'Link', color: 'from-blue-400 to-blue-500' },
+    { type: 'navigation' as const, icon: Menu, label: 'Navigation', color: 'from-slate-500 to-slate-600' },
     
     // Media Components
     { type: 'image' as const, icon: Image, label: 'Image', color: 'from-purple-500 to-purple-600' },

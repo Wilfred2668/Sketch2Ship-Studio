@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Element } from '../types/builder';
 import { X } from 'lucide-react';
@@ -57,6 +56,27 @@ const renderElement = (el: Element) => {
             </div>
           ))}
         </div>
+      );
+    case 'navigation':
+      const navItems = el.content.split('\n').filter(item => item.trim()).map(item => {
+        const [label, url] = item.split('|');
+        return { label: label?.trim() || 'Link', url: url?.trim() || '#' };
+      });
+      return (
+        <nav key={el.id} style={style} className="navigation-container">
+          <div style={{ display: 'flex', alignItems: 'center', padding: '12px 24px', backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0' }}>
+            {navItems.map((item, index) => (
+              <a
+                key={index}
+                href={item.url}
+                style={{ marginRight: '32px', color: '#374151', fontWeight: '500', textDecoration: 'none' }}
+                onClick={e => e.preventDefault()}
+              >
+                {item.label}
+              </a>
+            ))}
+          </div>
+        </nav>
       );
     case 'divider':
       return (

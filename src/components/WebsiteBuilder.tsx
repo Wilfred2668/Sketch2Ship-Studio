@@ -127,6 +127,7 @@ export const WebsiteBuilder = () => {
       case 'quote': return 'This is an inspiring quote that will motivate your visitors.';
       case 'slideshow': return 'image1.jpg\nimage2.jpg\nimage3.jpg';
       case 'accordion': return 'Section 1|Content for section 1\nSection 2|Content for section 2\nSection 3|Content for section 3';
+      case 'navigation': return 'Home|#\nAbout|#\nServices|#\nContact|#';
       default: return '';
     }
   }
@@ -175,6 +176,8 @@ export const WebsiteBuilder = () => {
         return { ...base, width: '400px', height: '300px', backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1' };
       case 'accordion':
         return { ...base, width: '350px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px' };
+      case 'navigation':
+        return { ...base, width: '100%', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', padding: '0', borderRadius: '0' };
       default:
         return base;
     }
