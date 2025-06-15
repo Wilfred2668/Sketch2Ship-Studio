@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Element } from '../types/builder';
 import { X } from 'lucide-react';
@@ -130,8 +129,8 @@ const renderElement = (el: Element) => {
                   borderRadius: '4px',
                   transition: 'background-color 0.2s'
                 }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#f3f4f6'}
-                onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                onMouseOver={(e) => (e.target as HTMLElement).style.backgroundColor = '#f3f4f6'}
+                onMouseOut={(e) => (e.target as HTMLElement).style.backgroundColor = 'transparent'}
               >
                 {item.label}
               </a>
@@ -203,7 +202,7 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ elements, theme, onC
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 transition-colors">
-      <div className={`w-[95vw] h-[95vh] max-w-[1400px] max-h-[900px] bg-white dark:bg-gray-900 rounded-lg shadow-2xl relative overflow-hidden transition-colors ${theme === 'dark' ? 'dark' : ''}`}>
+      <div className={`w-[98vw] h-[98vh] max-w-[1600px] max-h-[1000px] bg-white dark:bg-gray-900 rounded-lg shadow-2xl relative overflow-hidden transition-colors ${theme === 'dark' ? 'dark' : ''}`}>
         <button 
           className="absolute right-4 top-4 z-20 text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white bg-white/80 dark:bg-gray-800/80 rounded-full p-2" 
           onClick={onClose}
