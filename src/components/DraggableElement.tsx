@@ -1,8 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Element } from '../types/builder';
-import { NavigationEditor } from './NavigationEditor';
-import { AccordionEditor } from './AccordionEditor';
-import { SlideshowEditor } from './SlideshowEditor';
 
 interface DraggableElementProps {
   element: Element;
@@ -35,6 +32,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
   }, [isEditing]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    console.log('Mouse down on element:', element.type, element.id);
     if (isEditing) return;
     
     const rect = elementRef.current?.getBoundingClientRect();
@@ -46,6 +44,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
     }
     setIsDragging(true);
     onSelect();
+    console.log('Started dragging element:', element.id);
   };
 
   const handleDoubleClick = () => {
@@ -74,26 +73,37 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging) return;
       
+      console.log('Mouse moving while dragging');
       const canvas = document.querySelector('.canvas-area');
-      if (!canvas) return;
+      if (!canvas) {
+        console.log('Canvas not found!');
+        return;
+      }
       
       const canvasRect = canvas.getBoundingClientRect();
       const newX = e.clientX - canvasRect.left - dragOffset.x;
       const newY = e.clientY - canvasRect.top - dragOffset.y;
       
+      const newPosition = {
+        x: Math.max(0, newX),
+        y: Math.max(0, newY)
+      };
+      
+      console.log('Updating position to:', newPosition);
       onUpdate({
-        position: {
-          x: Math.max(0, newX),
-          y: Math.max(0, newY)
-        }
+        position: newPosition
       });
     };
 
     const handleMouseUp = () => {
+      if (isDragging) {
+        console.log('Stopped dragging element:', element.id);
+      }
       setIsDragging(false);
     };
 
     if (isDragging) {
+      console.log('Adding mouse event listeners');
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     }
@@ -102,7 +112,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragOffset, onUpdate]);
+  }, [isDragging, dragOffset, onUpdate, element.id]);
 
   // Render function for types
   const renderElement = () => {
