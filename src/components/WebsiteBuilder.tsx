@@ -189,36 +189,24 @@ export const WebsiteBuilder = () => {
         <ResizablePanelGroup direction="horizontal" className="flex-1 min-w-0">
           {/* PAGE SIDEBAR */}
           <ResizablePanel
-            minSize={sidebarPanelMinSize}
+            minSize={2}
             maxSize={30}
-            defaultSize={isPageSidebarCollapsed ? collapsedSize : sidebarPanelInitSize}
-            style={{ flexBasis: isPageSidebarCollapsed ? `${collapsedSize}%` : undefined, position: "relative", zIndex: 10 }}
-            className={`bg-white dark:bg-[#181928] border-r border-gray-200 dark:border-gray-700 transition-all h-full group`}
+            defaultSize={isPageSidebarCollapsed ? 2 : 18}
+            className="bg-white dark:bg-[#181928] border-r border-gray-200 dark:border-gray-700 transition-all h-full relative"
           >
-            {/* Place collapse/expand button INSIDE the sidebar, always at the edge */}
-            <div className="absolute top-3 right-0 z-40 flex items-center">
+            {/* Collapse/expand button positioned at the very edge */}
+            <button
+              className="absolute top-3 right-[-14px] z-50 rounded-full bg-white dark:bg-[#232434] border border-gray-300 dark:border-gray-600 p-1 transition hover:bg-gray-50 dark:hover:bg-[#292a3c] shadow-sm"
+              style={{ width: 28, height: 28 }}
+              onClick={() => setPageSidebarCollapsed(!isPageSidebarCollapsed)}
+              title={isPageSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
               {isPageSidebarCollapsed ? (
-                <button
-                  title="Expand sidebar"
-                  className="rounded-full bg-gray-100 dark:bg-[#232434] border border-gray-300 dark:border-gray-700 p-1 transition hover:bg-gray-200 dark:hover:bg-[#292a3c] shadow ml-1"
-                  style={{ width: 28, height: 28 }}
-                  onClick={() => setPageSidebarCollapsed(false)}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                  <span className="sr-only">Expand sidebar</span>
-                </button>
+                <ChevronRight className="w-4 h-4" />
               ) : (
-                <button
-                  title="Collapse sidebar"
-                  className="rounded-full bg-gray-100 dark:bg-[#232434] border border-gray-300 dark:border-gray-700 p-1 transition hover:bg-gray-200 dark:hover:bg-[#292a3c] shadow ml-1"
-                  style={{ width: 28, height: 28 }}
-                  onClick={() => setPageSidebarCollapsed(true)}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  <span className="sr-only">Collapse sidebar</span>
-                </button>
+                <ChevronLeft className="w-4 h-4" />
               )}
-            </div>
+            </button>
 
             {!isPageSidebarCollapsed && (
               <PageSidebar
@@ -232,48 +220,35 @@ export const WebsiteBuilder = () => {
             )}
           </ResizablePanel>
 
-          {/* Position the handle so it's always at the visible boundary */}
-          <ResizableHandle withHandle className="z-50" />
+          <ResizableHandle withHandle className="z-40 w-1 hover:w-2 transition-all" />
 
           {/* COMPONENT LIBRARY SIDEBAR */}
           <ResizablePanel
-            minSize={sidebarPanelMinSize}
+            minSize={2}
             maxSize={28}
-            defaultSize={isComponentSidebarCollapsed ? collapsedSize : sidebarPanelInitSize}
-            style={{ flexBasis: isComponentSidebarCollapsed ? `${collapsedSize}%` : undefined, position: "relative", zIndex: 10 }}
-            className={`bg-white dark:bg-[#191b23] border-r border-gray-200 dark:border-gray-700 transition-all h-full group`}
+            defaultSize={isComponentSidebarCollapsed ? 2 : 18}
+            className="bg-white dark:bg-[#191b23] border-r border-gray-200 dark:border-gray-700 transition-all h-full relative"
           >
-            {/* Place collapse/expand button INSIDE the sidebar, always at the edge */}
-            <div className="absolute top-3 right-0 z-40 flex items-center">
+            {/* Collapse/expand button positioned at the very edge */}
+            <button
+              className="absolute top-3 right-[-14px] z-50 rounded-full bg-white dark:bg-[#232434] border border-gray-300 dark:border-gray-600 p-1 transition hover:bg-gray-50 dark:hover:bg-[#292a3c] shadow-sm"
+              style={{ width: 28, height: 28 }}
+              onClick={() => setComponentSidebarCollapsed(!isComponentSidebarCollapsed)}
+              title={isComponentSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
               {isComponentSidebarCollapsed ? (
-                <button
-                  title="Expand sidebar"
-                  className="rounded-full bg-gray-100 dark:bg-[#232434] border border-gray-300 dark:border-gray-700 p-1 transition hover:bg-gray-200 dark:hover:bg-[#292a3c] shadow ml-1"
-                  style={{ width: 28, height: 28 }}
-                  onClick={() => setComponentSidebarCollapsed(false)}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                  <span className="sr-only">Expand sidebar</span>
-                </button>
+                <ChevronRight className="w-4 h-4" />
               ) : (
-                <button
-                  title="Collapse sidebar"
-                  className="rounded-full bg-gray-100 dark:bg-[#232434] border border-gray-300 dark:border-gray-700 p-1 transition hover:bg-gray-200 dark:hover:bg-[#292a3c] shadow ml-1"
-                  style={{ width: 28, height: 28 }}
-                  onClick={() => setComponentSidebarCollapsed(true)}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  <span className="sr-only">Collapse sidebar</span>
-                </button>
+                <ChevronLeft className="w-4 h-4" />
               )}
-            </div>
+            </button>
 
             {!isComponentSidebarCollapsed && (
               <ComponentLibrary onAddElement={addElement} />
             )}
           </ResizablePanel>
 
-          <ResizableHandle withHandle className="z-50" />
+          <ResizableHandle withHandle className="z-40 w-1 hover:w-2 transition-all" />
 
           {/* CANVAS AREA */}
           <ResizablePanel minSize={24} className="relative flex-1 min-w-0 z-10 bg-transparent">
