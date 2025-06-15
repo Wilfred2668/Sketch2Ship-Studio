@@ -9,8 +9,7 @@ import { PageSidebar } from './PageSidebar';
 import { useUndoRedo } from '../hooks/useUndoRedo';
 import { PropertiesPanel } from './PropertiesPanel';
 import { PreviewModal } from './PreviewModal';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from './ui/resizable';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { SidebarProvider, Sidebar, SidebarContent, SidebarTrigger } from './ui/sidebar';
 
 export interface Page {
   id: string;
@@ -30,10 +29,6 @@ export const WebsiteBuilder = () => {
   const [showExportModal, setShowExportModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-
-  // Sidebar collapse state
-  const [isPageSidebarCollapsed, setPageSidebarCollapsed] = useState(false);
-  const [isComponentSidebarCollapsed, setComponentSidebarCollapsed] = useState(false);
 
   const { snapshots, saveSnapshot, undo, redo, canUndo, canRedo } = useUndoRedo(
     pages, setPages
@@ -117,15 +112,6 @@ export const WebsiteBuilder = () => {
     setPages(pages => pages.map(p => p.id === renameId ? { ...p, name } : p));
   };
 
-  // Collapse handlers
-  const togglePageSidebar = () => {
-    setPageSidebarCollapsed(!isPageSidebarCollapsed);
-  };
-
-  const toggleComponentSidebar = () => {
-    setComponentSidebarCollapsed(!isComponentSidebarCollapsed);
-  };
-
   function getDefaultContent(type: Element['type']): string {
     switch (type) {
       case 'text': return 'Your text here';
@@ -190,29 +176,15 @@ export const WebsiteBuilder = () => {
         onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
         onPreview={() => setShowPreviewModal(true)}
       />
-      <div className="flex flex-1 h-[calc(100vh-64px)]">
-        <ResizablePanelGroup direction="horizontal" className="flex-1 min-w-0">
+      
+      <SidebarProvider>
+        <div className="flex flex-1 h-[calc(100vh-64px)] w-full">
           {/* PAGE SIDEBAR */}
-          <ResizablePanel
-            minSize={3}
-            maxSize={30}
-            defaultSize={isPageSidebarCollapsed ? 3 : 18}
-            className="bg-white dark:bg-[#181928] border-r border-gray-200 dark:border-gray-700 transition-all h-full relative"
-          >
-            {/* Collapse/expand button */}
-            <button
-              className="absolute top-4 right-0 translate-x-1/2 z-50 rounded-full bg-white dark:bg-[#232434] border border-gray-300 dark:border-gray-600 p-1.5 transition hover:bg-gray-50 dark:hover:bg-[#292a3c] shadow-sm"
-              onClick={togglePageSidebar}
-              title={isPageSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              {isPageSidebarCollapsed ? (
-                <ChevronRight className="w-4 h-4" />
-              ) : (
-                <ChevronLeft className="w-4 h-4" />
-              )}
-            </button>
-
-            {!isPageSidebarCollapsed && (
+          <Sidebar side="left" className="border-r border-gray-200 dark:border-gray-700">
+            <SidebarContent className="bg-white dark:bg-[#181928]">
+              <div className="flex items-center justify-between p-2 border-b">
+                <SidebarTrigger />
+              </div>
               <PageSidebar
                 pages={pages}
                 currentPageId={currentPageId}
@@ -221,40 +193,21 @@ export const WebsiteBuilder = () => {
                 deletePage={deletePage}
                 renamePage={renamePage}
               />
-            )}
-          </ResizablePanel>
-
-          <ResizableHandle withHandle className="z-40" />
+            </SidebarContent>
+          </Sidebar>
 
           {/* COMPONENT LIBRARY SIDEBAR */}
-          <ResizablePanel
-            minSize={3}
-            maxSize={28}
-            defaultSize={isComponentSidebarCollapsed ? 3 : 18}
-            className="bg-white dark:bg-[#191b23] border-r border-gray-200 dark:border-gray-700 transition-all h-full relative"
-          >
-            {/* Collapse/expand button */}
-            <button
-              className="absolute top-4 right-0 translate-x-1/2 z-50 rounded-full bg-white dark:bg-[#232434] border border-gray-300 dark:border-gray-600 p-1.5 transition hover:bg-gray-50 dark:hover:bg-[#292a3c] shadow-sm"
-              onClick={toggleComponentSidebar}
-              title={isComponentSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              {isComponentSidebarCollapsed ? (
-                <ChevronRight className="w-4 h-4" />
-              ) : (
-                <ChevronLeft className="w-4 h-4" />
-              )}
-            </button>
-
-            {!isComponentSidebarCollapsed && (
+          <Sidebar side="left" className="border-r border-gray-200 dark:border-gray-700">
+            <SidebarContent className="bg-white dark:bg-[#191b23]">
+              <div className="flex items-center justify-between p-2 border-b">
+                <SidebarTrigger />
+              </div>
               <ComponentLibrary onAddElement={addElement} />
-            )}
-          </ResizablePanel>
-
-          <ResizableHandle withHandle className="z-40" />
+            </SidebarContent>
+          </Sidebar>
 
           {/* CANVAS AREA */}
-          <ResizablePanel minSize={24} className="relative flex-1 min-w-0 z-10 bg-transparent">
+          <main className="flex-1 min-w-0 bg-transparent">
             <Canvas
               elements={elements}
               selectedElement={selectedElement}
@@ -267,18 +220,20 @@ export const WebsiteBuilder = () => {
               canUndo={canUndo}
               canRedo={canRedo}
             />
-          </ResizablePanel>
-        </ResizablePanelGroup>
-        {/* PROPERTIES PANEL */}
-        {selectedElement && (
-          <PropertiesPanel
-            element={elements.find(el => el.id === selectedElement)!}
-            onUpdate={updates => updateElement(selectedElement, updates)}
-            onClose={() => setSelectedElement(null)}
-            theme={theme}
-          />
-        )}
-      </div>
+          </main>
+
+          {/* PROPERTIES PANEL */}
+          {selectedElement && (
+            <PropertiesPanel
+              element={elements.find(el => el.id === selectedElement)!}
+              onUpdate={updates => updateElement(selectedElement, updates)}
+              onClose={() => setSelectedElement(null)}
+              theme={theme}
+            />
+          )}
+        </div>
+      </SidebarProvider>
+
       {showExportModal && (
         <ExportModal
           elements={elements}
