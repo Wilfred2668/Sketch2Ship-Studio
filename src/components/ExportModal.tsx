@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X, Download, Copy, Check } from 'lucide-react';
 import { Element } from '../types/builder';
@@ -33,6 +32,65 @@ export const ExportModal: React.FC<ExportModalProps> = ({ elements, onClose }) =
       .element {
         position: absolute;
       }
+
+      /* Responsive Slideshow */
+      .slideshow-container {
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .slideshow-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      /* Responsive Accordion */
+      .accordion-container {
+        width: 100%;
+      }
+      
+      .accordion-section {
+        border-bottom: 1px solid #e2e8f0;
+      }
+      
+      .accordion-header {
+        width: 100%;
+        padding: 12px 16px;
+        background: #f8fafc;
+        border: none;
+        text-align: left;
+        cursor: pointer;
+        font-weight: 500;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .accordion-header:hover {
+        background: #f1f5f9;
+      }
+      
+      .accordion-content {
+        padding: 12px 16px;
+        background: white;
+        display: none;
+      }
+      
+      .accordion-content.active {
+        display: block;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .element {
+          position: relative !important;
+          left: auto !important;
+          top: auto !important;
+          margin: 10px;
+          max-width: calc(100% - 20px);
+        }
+      }
     </style>`;
 
     const elementsHTML = elements.map(element => {
@@ -44,6 +102,28 @@ export const ExportModal: React.FC<ExportModalProps> = ({ elements, onClose }) =
       const fullStyle = `${styleString}; ${positionStyle}`;
 
       switch (element.type) {
+        case 'slideshow':
+          const images = element.content.split('\n').filter(img => img.trim());
+          return `    <div class="element slideshow-container" style="${fullStyle}">
+      ${images.length > 0 ? `<img src="${images[0]}" alt="Slideshow" />` : '<div style="width: 100%; height: 100%; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">Slideshow</div>'}
+    </div>`;
+        case 'accordion':
+          const sections = element.content.split('\n').filter(section => section.trim()).map(section => {
+            const [title, content] = section.split('|');
+            return { title: title?.trim() || 'Section', content: content?.trim() || 'Content' };
+          });
+          const accordionHTML = sections.map((section, index) => `
+        <div class="accordion-section">
+          <button class="accordion-header" onclick="toggleAccordion(${index})">
+            ${section.title}
+            <span>▼</span>
+          </button>
+          <div class="accordion-content" id="accordion-${index}">
+            ${section.content}
+          </div>
+        </div>`).join('');
+          return `    <div class="element accordion-container" style="${fullStyle}">${accordionHTML}
+    </div>`;
         case 'text':
           return `    <span class="element" style="${fullStyle}">${element.content}</span>`;
         case 'heading':
@@ -77,6 +157,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({ elements, onClose }) =
       }
     }).join('\n');
 
+    const accordionScript = `
+    <script>
+      function toggleAccordion(index) {
+        const content = document.getElementById('accordion-' + index);
+        content.classList.toggle('active');
+      }
+    </script>`;
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -87,6 +175,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ elements, onClose }) =
 </head>
 <body>
 ${elementsHTML}
+${accordionScript}
 </body>
 </html>`;
   };
@@ -101,6 +190,22 @@ ${elementsHTML}
       const fullStyle = `{\n${styleObj},\n${positionStyle}\n  }`;
 
       switch (element.type) {
+        case 'slideshow':
+          const images = element.content.split('\n').filter(img => img.trim());
+          return `    <div style={${fullStyle}} className="slideshow-container">
+      {${JSON.stringify(images)}.length > 0 ? (
+        <img src={${JSON.stringify(images)}[0]} alt="Slideshow" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+      ) : (
+        <div style={{width: '100%', height: '100%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+          Slideshow
+        </div>
+      )}
+    </div>`;
+        case 'accordion':
+          return `    <div style={${fullStyle}} className="accordion-container">
+      {/* Accordion sections would go here */}
+      <div>{element.content}</div>
+    </div>`;
         case 'text':
           return `    <span style={${fullStyle}}>${element.content}</span>`;
         case 'heading':
@@ -159,6 +264,28 @@ export default MyComponent;`;
       const fullStyle = `${styleObj}; ${positionStyle}`;
 
       switch (element.type) {
+        case 'slideshow':
+          const images = element.content.split('\n').filter(img => img.trim());
+          return `    <div class="element slideshow-container" style="${fullStyle}">
+      ${images.length > 0 ? `<img src="${images[0]}" alt="Slideshow" />` : '<div style="width: 100%; height: 100%; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">Slideshow</div>'}
+    </div>`;
+        case 'accordion':
+          const sections = element.content.split('\n').filter(section => section.trim()).map(section => {
+            const [title, content] = section.split('|');
+            return { title: title?.trim() || 'Section', content: content?.trim() || 'Content' };
+          });
+          const accordionHTML = sections.map((section, index) => `
+        <div class="accordion-section">
+          <button class="accordion-header" onclick="toggleAccordion(${index})">
+            ${section.title}
+            <span>▼</span>
+          </button>
+          <div class="accordion-content" id="accordion-${index}">
+            ${section.content}
+          </div>
+        </div>`).join('');
+          return `    <div class="element accordion-container" style="${fullStyle}">${accordionHTML}
+    </div>`;
         case 'text':
           return `    <span style="${fullStyle}">${element.content}</span>`;
         case 'heading':
@@ -217,6 +344,22 @@ export default {
       const fullStyle = `{\n${styleObj},\n${positionStyle}\n  }`;
 
       switch (element.type) {
+        case 'slideshow':
+          const images = element.content.split('\n').filter(img => img.trim());
+          return `    <div style={${fullStyle}} className="slideshow-container">
+      {${JSON.stringify(images)}.length > 0 ? (
+        <img src={${JSON.stringify(images)}[0]} alt="Slideshow" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+      ) : (
+        <div style={{width: '100%', height: '100%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+          Slideshow
+        </div>
+      )}
+    </div>`;
+        case 'accordion':
+          return `    <div style={${fullStyle}} className="accordion-container">
+      {/* Accordion sections would go here */}
+      <div>{element.content}</div>
+    </div>`;
         case 'text':
           return `    <span style={${fullStyle}}>${element.content}</span>`;
         case 'heading':

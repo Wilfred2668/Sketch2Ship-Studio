@@ -17,6 +17,8 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isEditing, setIsEditing] = useState(false);
+  const [slideshowIndex, setSlideshowIndex] = useState(0);
+  const [accordionOpenIndex, setAccordionOpenIndex] = useState<number | null>(null);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -77,7 +79,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
         minWidth: element.type === 'text' ? '100px' : 'auto',
         minHeight: element.type === 'text' ? '30px' : 'auto',
         cursor: isDragging ? 'grabbing' : element.styles.cursor || 'pointer',
-      }
+      } as React.CSSProperties
     };
 
     switch (element.type) {
@@ -91,7 +93,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
             onKeyDown={e => e.key === 'Enter' && setIsEditing(false)}
             autoFocus
             className="border rounded px-2 py-1 w-full bg-background"
-            style={element.styles}
+            style={element.styles as React.CSSProperties}
           />
         ) : (
           <span {...commonProps}>{element.content}</span>
@@ -106,7 +108,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
             onKeyDown={e => e.key === 'Enter' && setIsEditing(false)}
             autoFocus
             className="border rounded text-2xl font-bold px-2 py-1 w-full bg-background"
-            style={element.styles}
+            style={element.styles as React.CSSProperties}
           />
         ) : (
           <h2 {...commonProps}>{element.content}</h2>
@@ -121,7 +123,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
             onKeyDown={e => e.key === 'Enter' && setIsEditing(false)}
             autoFocus
             className="border rounded px-2 py-1 w-full bg-background"
-            style={element.styles}
+            style={element.styles as React.CSSProperties}
           />
         ) : (
           <button {...commonProps}>{element.content}</button>
@@ -136,7 +138,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
             onKeyDown={e => e.key === 'Enter' && setIsEditing(false)}
             autoFocus
             className="border rounded px-2 py-1 w-full bg-background"
-            style={element.styles}
+            style={element.styles as React.CSSProperties}
           />
         ) : (
           <a {...commonProps} href="#" onClick={e => e.preventDefault()}>{element.content}</a>
@@ -177,10 +179,81 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
             onKeyDown={e => e.key === 'Enter' && setIsEditing(false)}
             autoFocus
             className="border rounded px-2 py-1 w-full bg-background text-center"
-            style={element.styles}
+            style={element.styles as React.CSSProperties}
           />
         ) : (
           <span {...commonProps}>{element.content}</span>
+        );
+      case 'slideshow':
+        const images = element.content.split('\n').filter(img => img.trim());
+        return (
+          <div {...commonProps} className="relative bg-gray-100 border border-gray-300 rounded overflow-hidden">
+            {images.length > 0 ? (
+              <>
+                <img 
+                  src={images[slideshowIndex] || images[0]} 
+                  alt={`Slide ${slideshowIndex + 1}`} 
+                  className="w-full h-full object-cover" 
+                />
+                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
+                  {images.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSlideshowIndex(index)}
+                      className={`w-2 h-2 rounded-full ${index === slideshowIndex ? 'bg-white' : 'bg-white/50'}`}
+                    />
+                  ))}
+                </div>
+                {images.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => setSlideshowIndex((prev) => (prev - 1 + images.length) % images.length)}
+                      className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      onClick={() => setSlideshowIndex((prev) => (prev + 1) % images.length)}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center"
+                    >
+                      ›
+                    </button>
+                  </>
+                )}
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                Slideshow Placeholder
+              </div>
+            )}
+          </div>
+        );
+      case 'accordion':
+        const sections = element.content.split('\n').filter(section => section.trim()).map(section => {
+          const [title, content] = section.split('|');
+          return { title: title?.trim() || 'Section', content: content?.trim() || 'Content' };
+        });
+        return (
+          <div {...commonProps} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            {sections.map((section, index) => (
+              <div key={index} className="border-b border-gray-200 last:border-b-0">
+                <button
+                  onClick={() => setAccordionOpenIndex(accordionOpenIndex === index ? null : index)}
+                  className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 flex justify-between items-center"
+                >
+                  <span className="font-medium">{section.title}</span>
+                  <span className={`transform transition-transform ${accordionOpenIndex === index ? 'rotate-180' : ''}`}>
+                    ▼
+                  </span>
+                </button>
+                {accordionOpenIndex === index && (
+                  <div className="px-4 py-3 bg-white">
+                    {section.content}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         );
       case 'divider':
         return (

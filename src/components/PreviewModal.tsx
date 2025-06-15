@@ -26,6 +26,38 @@ const renderElement = (el: Element) => {
       );
     case 'icon':
       return <span key={el.id} style={style}>{el.content}</span>;
+    case 'slideshow':
+      const images = el.content.split('\n').filter(img => img.trim());
+      return (
+        <div key={el.id} style={style} className="slideshow-container">
+          {images.length > 0 ? (
+            <img src={images[0]} alt="Slideshow" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <div style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              Slideshow
+            </div>
+          )}
+        </div>
+      );
+    case 'accordion':
+      const sections = el.content.split('\n').filter(section => section.trim()).map(section => {
+        const [title, content] = section.split('|');
+        return { title: title?.trim() || 'Section', content: content?.trim() || 'Content' };
+      });
+      return (
+        <div key={el.id} style={style} className="accordion-container">
+          {sections.map((section, index) => (
+            <div key={index} style={{ borderBottom: index < sections.length - 1 ? '1px solid #e2e8f0' : 'none' }}>
+              <div style={{ padding: '12px 16px', backgroundColor: '#f8fafc', fontWeight: '500' }}>
+                {section.title}
+              </div>
+              <div style={{ padding: '12px 16px', backgroundColor: '#ffffff' }}>
+                {section.content}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
     case 'divider':
       return (
         <div key={el.id} style={style}>
