@@ -31,9 +31,7 @@ export const WebsiteBuilder = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-  // Sidebar collapse state with panel size control
-  const [pageSidebarSize, setPageSidebarSize] = useState(18);
-  const [componentSidebarSize, setComponentSidebarSize] = useState(18);
+  // Sidebar collapse state
   const [isPageSidebarCollapsed, setPageSidebarCollapsed] = useState(false);
   const [isComponentSidebarCollapsed, setComponentSidebarCollapsed] = useState(false);
 
@@ -119,25 +117,13 @@ export const WebsiteBuilder = () => {
     setPages(pages => pages.map(p => p.id === renameId ? { ...p, name } : p));
   };
 
-  // Collapse handlers that properly update panel sizes
+  // Collapse handlers
   const togglePageSidebar = () => {
-    if (isPageSidebarCollapsed) {
-      setPageSidebarSize(18);
-      setPageSidebarCollapsed(false);
-    } else {
-      setPageSidebarSize(3);
-      setPageSidebarCollapsed(true);
-    }
+    setPageSidebarCollapsed(!isPageSidebarCollapsed);
   };
 
   const toggleComponentSidebar = () => {
-    if (isComponentSidebarCollapsed) {
-      setComponentSidebarSize(18);
-      setComponentSidebarCollapsed(false);
-    } else {
-      setComponentSidebarSize(3);
-      setComponentSidebarCollapsed(true);
-    }
+    setComponentSidebarCollapsed(!isComponentSidebarCollapsed);
   };
 
   function getDefaultContent(type: Element['type']): string {
@@ -210,12 +196,10 @@ export const WebsiteBuilder = () => {
           <ResizablePanel
             minSize={3}
             maxSize={30}
-            defaultSize={pageSidebarSize}
-            size={pageSidebarSize}
-            onSizeChange={setPageSidebarSize}
+            defaultSize={isPageSidebarCollapsed ? 3 : 18}
             className="bg-white dark:bg-[#181928] border-r border-gray-200 dark:border-gray-700 transition-all h-full relative"
           >
-            {/* Collapse/expand button - positioned at panel edge */}
+            {/* Collapse/expand button */}
             <button
               className="absolute top-4 right-0 translate-x-1/2 z-50 rounded-full bg-white dark:bg-[#232434] border border-gray-300 dark:border-gray-600 p-1.5 transition hover:bg-gray-50 dark:hover:bg-[#292a3c] shadow-sm"
               onClick={togglePageSidebar}
@@ -246,12 +230,10 @@ export const WebsiteBuilder = () => {
           <ResizablePanel
             minSize={3}
             maxSize={28}
-            defaultSize={componentSidebarSize}
-            size={componentSidebarSize}
-            onSizeChange={setComponentSidebarSize}
+            defaultSize={isComponentSidebarCollapsed ? 3 : 18}
             className="bg-white dark:bg-[#191b23] border-r border-gray-200 dark:border-gray-700 transition-all h-full relative"
           >
-            {/* Collapse/expand button - positioned at panel edge */}
+            {/* Collapse/expand button */}
             <button
               className="absolute top-4 right-0 translate-x-1/2 z-50 rounded-full bg-white dark:bg-[#232434] border border-gray-300 dark:border-gray-600 p-1.5 transition hover:bg-gray-50 dark:hover:bg-[#292a3c] shadow-sm"
               onClick={toggleComponentSidebar}
