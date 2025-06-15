@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { ComponentLibrary } from './ComponentLibrary';
 import { Canvas } from './Canvas';
@@ -8,6 +9,8 @@ import { PageSidebar } from './PageSidebar';
 import { useUndoRedo } from '../hooks/useUndoRedo';
 import { PropertiesPanel } from './PropertiesPanel';
 import { PreviewModal } from './PreviewModal';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from './ui/resizable';
+import { ChevronLeft, ChevronRight, LayoutPanelLeft, LayoutPanelRight } from 'lucide-react';
 
 export interface Page {
   id: string;
@@ -27,6 +30,10 @@ export const WebsiteBuilder = () => {
   const [showExportModal, setShowExportModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  // Sidebar collapse state
+  const [isPageSidebarCollapsed, setPageSidebarCollapsed] = useState(false);
+  const [isComponentSidebarCollapsed, setComponentSidebarCollapsed] = useState(false);
 
   const { snapshots, saveSnapshot, undo, redo, canUndo, canRedo } = useUndoRedo(
     pages, setPages
@@ -166,8 +173,13 @@ export const WebsiteBuilder = () => {
     }
   }, [theme]);
 
-  // Fix: open PropertiesPanel when an element is selected/clicked
-  // This is already managed with selectedElement, but ensure PropertiesPanel is rendered from the right spot
+  // Resizable/collapsible sidebar controls
+  // Give minimums so the canvas never disappears
+  const sidebarPanelMinSize = 8;   // percent (about 96px at 1200px wide)
+  const sidebarPanelInitSize = 18; // for each
+
+  // Collapsed sidebars panel size
+  const collapsedSize = 2; // percent ~24px
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[#16171a] dark:to-[#101215] flex flex-col transition-colors ${theme === 'dark' ? 'dark' : ''}`}>
@@ -178,38 +190,81 @@ export const WebsiteBuilder = () => {
         onPreview={() => setShowPreviewModal(true)}
       />
       <div className="flex flex-1 h-[calc(100vh-64px)]">
-        {/* Sidebar */}
-        <div className="z-30 relative">
-          <PageSidebar
-            pages={pages}
-            currentPageId={currentPageId}
-            setCurrentPageId={setCurrentPageId}
-            addPage={addPage}
-            deletePage={deletePage}
-            renamePage={renamePage}
-          />
-        </div>
-        {/* Component Library Sidebar */}
-        <div className="z-20 relative w-80 shrink-0">
-          <ComponentLibrary onAddElement={addElement} />
-        </div>
-        {/* Canvas */}
-        <div className="flex-1 min-w-0 z-10 relative">
-          <Canvas
-            elements={elements}
-            selectedElement={selectedElement}
-            onSelectElement={setSelectedElement}
-            onUpdateElement={updateElement}
-            onDeleteElement={deleteElement}
-            onDuplicateElement={duplicateElement}
-            onUndo={undo}
-            onRedo={redo}
-            canUndo={canUndo}
-            canRedo={canRedo}
-          />
-        </div>
+        <ResizablePanelGroup direction="horizontal" className="flex-1 min-w-0">
+          {/* PAGE SIDEBAR */}
+          <ResizablePanel
+            minSize={sidebarPanelMinSize}
+            maxSize={30}
+            defaultSize={isPageSidebarCollapsed ? collapsedSize : sidebarPanelInitSize}
+            collapsible
+            collapsed={isPageSidebarCollapsed}
+            className={`relative bg-white dark:bg-[#181928] border-r border-gray-200 dark:border-gray-700 transition-all h-full group`}
+          >
+            {!isPageSidebarCollapsed && (
+              <PageSidebar
+                pages={pages}
+                currentPageId={currentPageId}
+                setCurrentPageId={setCurrentPageId}
+                addPage={addPage}
+                deletePage={deletePage}
+                renamePage={renamePage}
+              />
+            )}
+            <button
+              title={isPageSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className={`absolute top-3 -right-3 z-40 rounded-full bg-gray-100 dark:bg-[#232434] border border-gray-300 dark:border-gray-700 p-1 transition hover:bg-gray-200 dark:hover:bg-[#292a3c] shadow group-hover:opacity-100 opacity-0 md:opacity-100`}
+              style={{ width: 28, height: 28 }}
+              onClick={() => setPageSidebarCollapsed(v => !v)}
+            >
+              {isPageSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+              <span className="sr-only">{isPageSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}</span>
+            </button>
+          </ResizablePanel>
 
-        {/* Properties Panel */}
+          <ResizableHandle withHandle />
+
+          {/* COMPONENT LIBRARY SIDEBAR */}
+          <ResizablePanel
+            minSize={sidebarPanelMinSize}
+            maxSize={28}
+            defaultSize={isComponentSidebarCollapsed ? collapsedSize : sidebarPanelInitSize}
+            collapsible
+            collapsed={isComponentSidebarCollapsed}
+            className={`relative bg-white dark:bg-[#191b23] border-r border-gray-200 dark:border-gray-700 transition-all h-full group`}
+          >
+            {!isComponentSidebarCollapsed && (
+              <ComponentLibrary onAddElement={addElement} />
+            )}
+            <button
+              title={isComponentSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className={`absolute top-3 -right-3 z-40 rounded-full bg-gray-100 dark:bg-[#232434] border border-gray-300 dark:border-gray-700 p-1 transition hover:bg-gray-200 dark:hover:bg-[#292a3c] shadow group-hover:opacity-100 opacity-0 md:opacity-100`}
+              style={{ width: 28, height: 28 }}
+              onClick={() => setComponentSidebarCollapsed(v => !v)}
+            >
+              {isComponentSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+              <span className="sr-only">{isComponentSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}</span>
+            </button>
+          </ResizablePanel>
+
+          <ResizableHandle withHandle />
+
+          {/* CANVAS AREA */}
+          <ResizablePanel minSize={24} className="relative flex-1 min-w-0 z-10 bg-transparent">
+            <Canvas
+              elements={elements}
+              selectedElement={selectedElement}
+              onSelectElement={setSelectedElement}
+              onUpdateElement={updateElement}
+              onDeleteElement={deleteElement}
+              onDuplicateElement={duplicateElement}
+              onUndo={undo}
+              onRedo={redo}
+              canUndo={canUndo}
+              canRedo={canRedo}
+            />
+          </ResizablePanel>
+        </ResizablePanelGroup>
+        {/* PROPERTIES PANEL */}
         {selectedElement && (
           <PropertiesPanel
             element={elements.find(el => el.id === selectedElement)!}
@@ -235,3 +290,5 @@ export const WebsiteBuilder = () => {
     </div>
   );
 };
+
+// ...end of file
