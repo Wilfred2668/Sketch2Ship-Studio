@@ -2,7 +2,7 @@
 import React from 'react';
 import { Element } from '../types/builder';
 import { DraggableElement } from './DraggableElement';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Copy, Undo, Redo } from 'lucide-react';
 
 interface CanvasProps {
   elements: Element[];
@@ -10,6 +10,11 @@ interface CanvasProps {
   onSelectElement: (id: string | null) => void;
   onUpdateElement: (id: string, updates: Partial<Element>) => void;
   onDeleteElement: (id: string) => void;
+  onDuplicateElement: (id: string) => void;
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
 }
 
 export const Canvas: React.FC<CanvasProps> = ({
@@ -18,6 +23,11 @@ export const Canvas: React.FC<CanvasProps> = ({
   onSelectElement,
   onUpdateElement,
   onDeleteElement,
+  onDuplicateElement,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
 }) => {
   const handleCanvasClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -27,10 +37,10 @@ export const Canvas: React.FC<CanvasProps> = ({
 
   return (
     <div className="flex-1 relative overflow-hidden">
-      <div 
+      <div
         className="w-full h-full bg-white relative cursor-default"
         onClick={handleCanvasClick}
-        style={{ 
+        style={{
           backgroundImage: `
             radial-gradient(circle at 25px 25px, rgba(0,0,0,0.05) 2px, transparent 2px),
             radial-gradient(circle at 75px 75px, rgba(0,0,0,0.05) 2px, transparent 2px)
@@ -60,14 +70,45 @@ export const Canvas: React.FC<CanvasProps> = ({
           />
         ))}
 
+        {/* Selected element toolbar: Delete + Duplicate */}
         {selectedElement && (
-          <button
-            onClick={() => onDeleteElement(selectedElement)}
-            className="fixed bottom-6 right-6 bg-red-500 hover:bg-red-600 text-white p-3 rounded-full shadow-lg transition-colors z-50"
-          >
-            <Trash2 className="w-5 h-5" />
-          </button>
+          <div className="fixed bottom-6 right-6 flex gap-3 z-50">
+            <button
+              onClick={() => onDuplicateElement(selectedElement)}
+              className="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full shadow-lg transition-colors"
+              title="Duplicate"
+            >
+              <Copy className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => onDeleteElement(selectedElement)}
+              className="bg-red-500 hover:bg-red-600 text-white p-3 rounded-full shadow-lg transition-colors"
+              title="Delete"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          </div>
         )}
+
+        {/* Undo / Redo toolbar */}
+        <div className="fixed bottom-6 right-32 flex gap-2 z-50">
+          <button
+            onClick={onUndo}
+            disabled={!canUndo}
+            className={`bg-gray-200 hover:bg-gray-300 p-2 rounded-full shadow transition-all ${!canUndo ? 'opacity-30 cursor-not-allowed' : ''}`}
+            title="Undo"
+          >
+            <Undo className="w-5 h-5" />
+          </button>
+          <button
+            onClick={onRedo}
+            disabled={!canRedo}
+            className={`bg-gray-200 hover:bg-gray-300 p-2 rounded-full shadow transition-all ${!canRedo ? 'opacity-30 cursor-not-allowed' : ''}`}
+            title="Redo"
+          >
+            <Redo className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </div>
   );
