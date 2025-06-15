@@ -36,10 +36,9 @@ export const Canvas: React.FC<CanvasProps> = ({
   };
 
   return (
-    <div className="flex-1 relative overflow-hidden">
+    <div className="flex-1 relative min-h-0">
       <div
-        className="w-full h-full bg-white relative cursor-default"
-        onClick={handleCanvasClick}
+        className="w-full h-full overflow-auto"
         style={{
           backgroundImage: `
             radial-gradient(circle at 25px 25px, rgba(0,0,0,0.05) 2px, transparent 2px),
@@ -47,29 +46,39 @@ export const Canvas: React.FC<CanvasProps> = ({
           `,
           backgroundSize: '100px 100px'
         }}
+        onClick={handleCanvasClick}
       >
-        {elements.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl text-gray-500">✨</span>
+        <div
+          className="relative"
+          style={{
+            width: 3000, // Effectively infinite canvas 
+            height: 2000,
+            minWidth: "100vw",
+            minHeight: "100vh"
+          }}
+        >
+          {elements.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl text-gray-500">✨</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">Start Building</h3>
+                <p className="text-gray-500">Drag components from the left panel to get started</p>
               </div>
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">Start Building</h3>
-              <p className="text-gray-500">Drag components from the left panel to get started</p>
             </div>
-          </div>
-        )}
+          )}
 
-        {elements.map((element) => (
-          <DraggableElement
-            key={element.id}
-            element={element}
-            isSelected={selectedElement === element.id}
-            onSelect={() => onSelectElement(element.id)}
-            onUpdate={(updates) => onUpdateElement(element.id, updates)}
-          />
-        ))}
-
+          {elements.map((element) => (
+            <DraggableElement
+              key={element.id}
+              element={element}
+              isSelected={selectedElement === element.id}
+              onSelect={() => onSelectElement(element.id)}
+              onUpdate={(updates) => onUpdateElement(element.id, updates)}
+            />
+          ))}
+        </div>
         {/* Selected element toolbar: Delete + Duplicate */}
         {selectedElement && (
           <div className="fixed bottom-6 right-6 flex gap-3 z-50">

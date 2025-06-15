@@ -6,6 +6,8 @@ import { ExportModal } from './ExportModal';
 import { Element } from '../types/builder';
 import { PageSidebar } from './PageSidebar';
 import { useUndoRedo } from '../hooks/useUndoRedo';
+import { PropertiesPanel } from './PropertiesPanel';
+import { PreviewModal } from './PreviewModal';
 
 export interface Page {
   id: string;
@@ -23,6 +25,7 @@ export const WebsiteBuilder = () => {
   const [currentPageId, setCurrentPageId] = useState(pages[0].id);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   const { snapshots, saveSnapshot, undo, redo, canUndo, canRedo } = useUndoRedo(
@@ -152,21 +155,24 @@ export const WebsiteBuilder = () => {
     }
   }
 
-  // Apply theme to body
+  // Apply theme to body and root container
   React.useEffect(() => {
     if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
       document.body.classList.add('dark');
     } else {
+      document.documentElement.classList.remove('dark');
       document.body.classList.remove('dark');
     }
   }, [theme]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[#16171a] dark:to-[#101215] flex flex-col transition-colors">
+    <div className={`min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[#16171a] dark:to-[#101215] flex flex-col transition-colors ${theme === 'dark' ? 'dark' : ''}`}>
       <Header 
         onExport={() => setShowExportModal(true)}
         theme={theme}
         onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        onPreview={() => setShowPreviewModal(true)}
       />
       <div className="flex flex-1 h-[calc(100vh-64px)]">
         <PageSidebar
@@ -191,11 +197,28 @@ export const WebsiteBuilder = () => {
           canUndo={canUndo}
           canRedo={canRedo}
         />
+
+        {/* Properties Panel */}
+        {selectedElement && (
+          <PropertiesPanel
+            element={elements.find(el => el.id === selectedElement)!}
+            onUpdate={updates => updateElement(selectedElement, updates)}
+            onClose={() => setSelectedElement(null)}
+            theme={theme}
+          />
+        )}
       </div>
       {showExportModal && (
         <ExportModal
           elements={elements}
           onClose={() => setShowExportModal(false)}
+        />
+      )}
+      {showPreviewModal && (
+        <PreviewModal
+          elements={elements}
+          theme={theme}
+          onClose={() => setShowPreviewModal(false)}
         />
       )}
     </div>

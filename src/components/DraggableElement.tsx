@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Element } from '../types/builder';
 
@@ -55,6 +54,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
     }
   }, [isDragging, dragStart]);
 
+  // Enable editing on double-click
   const handleDoubleClick = () => {
     // Enable inline editing for text/heading/button/card
     if (['text', 'heading', 'button', 'card'].includes(element.type)) {
@@ -62,11 +62,13 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
     }
   };
 
+  // Finish editing on blur or Enter
   const handleContentChange = (newContent: string) => {
     onUpdate({ content: newContent });
     setIsEditing(false);
   };
 
+  // Render function for types
   const renderElement = () => {
     const commonProps = {
       style: {
@@ -74,6 +76,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
         display: 'inline-block',
         minWidth: element.type === 'text' ? '100px' : 'auto',
         minHeight: element.type === 'text' ? '30px' : 'auto',
+        cursor: isDragging ? 'grabbing' : element.styles.cursor || 'pointer',
       }
     };
 
@@ -83,9 +86,9 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
           <input
             type="text"
             value={element.content}
-            onChange={(e) => handleContentChange(e.target.value)}
+            onChange={e => onUpdate({ content: e.target.value })}
             onBlur={() => setIsEditing(false)}
-            onKeyPress={(e) => e.key === 'Enter' && setIsEditing(false)}
+            onKeyDown={e => e.key === 'Enter' && setIsEditing(false)}
             autoFocus
             className="border rounded px-2 py-1 w-full bg-background"
             style={element.styles}
@@ -98,9 +101,9 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
           <input
             type="text"
             value={element.content}
-            onChange={(e) => handleContentChange(e.target.value)}
+            onChange={e => onUpdate({ content: e.target.value })}
             onBlur={() => setIsEditing(false)}
-            onKeyPress={(e) => e.key === 'Enter' && setIsEditing(false)}
+            onKeyDown={e => e.key === 'Enter' && setIsEditing(false)}
             autoFocus
             className="border rounded text-2xl font-bold px-2 py-1 w-full bg-background"
             style={element.styles}
@@ -113,9 +116,9 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
           <input
             type="text"
             value={element.content}
-            onChange={(e) => handleContentChange(e.target.value)}
+            onChange={e => onUpdate({ content: e.target.value })}
             onBlur={() => setIsEditing(false)}
-            onKeyPress={(e) => e.key === 'Enter' && setIsEditing(false)}
+            onKeyDown={e => e.key === 'Enter' && setIsEditing(false)}
             autoFocus
             className="border rounded px-2 py-1 w-full bg-background"
             style={element.styles}
@@ -137,18 +140,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
           </div>
         );
       case 'divider':
-        // Divider: simple horizontal line, editable label above on double-click
-        return isEditing ? (
-          <input
-            type="text"
-            value={element.content}
-            onChange={(e) => handleContentChange(e.target.value)}
-            onBlur={() => setIsEditing(false)}
-            onKeyPress={(e) => e.key === 'Enter' && setIsEditing(false)}
-            autoFocus
-            className="border rounded px-2 py-1 w-full bg-background"
-          />
-        ) : (
+        return (
           <div className="w-full flex flex-col items-center py-2" {...commonProps}>
             {element.content && <span className="text-xs text-muted-foreground mb-1">{element.content}</span>}
             <hr className="w-32 border-t border-gray-400" />
@@ -158,7 +150,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
         return isEditing ? (
           <textarea
             value={element.content}
-            onChange={(e) => handleContentChange(e.target.value)}
+            onChange={e => onUpdate({ content: e.target.value })}
             onBlur={() => setIsEditing(false)}
             rows={3}
             autoFocus
@@ -187,6 +179,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
       onMouseDown={handleMouseDown}
       onClick={onSelect}
       onDoubleClick={handleDoubleClick}
+      tabIndex={0}
     >
       {renderElement()}
       

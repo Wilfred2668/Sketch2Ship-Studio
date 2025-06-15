@@ -7,9 +7,10 @@ interface HeaderProps {
   onExport: () => void;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
+  onPreview?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onExport, theme = 'light', onToggleTheme }) => {
+export const Header: React.FC<HeaderProps> = ({ onExport, theme = 'light', onToggleTheme, onPreview }) => {
   return (
     <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between shadow-sm transition-colors">
       <div className="flex items-center space-x-4">
@@ -35,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({ onExport, theme = 'light', onTog
             <Moon className="w-5 h-5 text-gray-700" />
           }
         </Button>
-        <Button variant="outline" size="sm" className="flex items-center gap-2">
+        <Button variant="outline" size="sm" className="flex items-center gap-2" onClick={onPreview}>
           <Eye className="w-4 h-4" />
           Preview
         </Button>
