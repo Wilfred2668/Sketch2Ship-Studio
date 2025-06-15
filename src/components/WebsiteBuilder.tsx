@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { ComponentLibrary } from './ComponentLibrary';
 import { Canvas } from './Canvas';
@@ -10,7 +9,7 @@ import { useUndoRedo } from '../hooks/useUndoRedo';
 import { PropertiesPanel } from './PropertiesPanel';
 import { PreviewModal } from './PreviewModal';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from './ui/resizable';
-import { ChevronLeft, ChevronRight, LayoutPanelLeft, LayoutPanelRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface Page {
   id: string;
@@ -175,12 +174,10 @@ export const WebsiteBuilder = () => {
 
   // Resizable/collapsible sidebar controls
   // Give minimums so the canvas never disappears
-  const sidebarPanelMinSize = 8;   // percent (about 96px at 1200px wide)
+  const sidebarPanelMinSize = 8;   // percent
   const sidebarPanelInitSize = 18; // for each
-
-  // Collapsed sidebars panel size
-  const collapsedSize = 2; // percent ~24px
-
+  const collapsedSize = 2;         // percent ~24px
+  
   return (
     <div className={`min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[#16171a] dark:to-[#101215] flex flex-col transition-colors ${theme === 'dark' ? 'dark' : ''}`}>
       <Header 
@@ -196,29 +193,41 @@ export const WebsiteBuilder = () => {
             minSize={sidebarPanelMinSize}
             maxSize={30}
             defaultSize={isPageSidebarCollapsed ? collapsedSize : sidebarPanelInitSize}
-            collapsible
-            collapsed={isPageSidebarCollapsed}
+            style={{ flexBasis: isPageSidebarCollapsed ? `${collapsedSize}%` : undefined }}
             className={`relative bg-white dark:bg-[#181928] border-r border-gray-200 dark:border-gray-700 transition-all h-full group`}
           >
-            {!isPageSidebarCollapsed && (
-              <PageSidebar
-                pages={pages}
-                currentPageId={currentPageId}
-                setCurrentPageId={setCurrentPageId}
-                addPage={addPage}
-                deletePage={deletePage}
-                renamePage={renamePage}
-              />
+            {isPageSidebarCollapsed ? (
+              // Show expand button only
+              <button
+                title="Expand sidebar"
+                className="absolute top-3 -right-3 z-40 rounded-full bg-gray-100 dark:bg-[#232434] border border-gray-300 dark:border-gray-700 p-1 transition hover:bg-gray-200 dark:hover:bg-[#292a3c] shadow"
+                style={{ width: 28, height: 28 }}
+                onClick={() => setPageSidebarCollapsed(false)}
+              >
+                <ChevronRight className="w-4 h-4" />
+                <span className="sr-only">Expand sidebar</span>
+              </button>
+            ) : (
+              <>
+                <PageSidebar
+                  pages={pages}
+                  currentPageId={currentPageId}
+                  setCurrentPageId={setCurrentPageId}
+                  addPage={addPage}
+                  deletePage={deletePage}
+                  renamePage={renamePage}
+                />
+                <button
+                  title="Collapse sidebar"
+                  className="absolute top-3 -right-3 z-40 rounded-full bg-gray-100 dark:bg-[#232434] border border-gray-300 dark:border-gray-700 p-1 transition hover:bg-gray-200 dark:hover:bg-[#292a3c] shadow"
+                  style={{ width: 28, height: 28 }}
+                  onClick={() => setPageSidebarCollapsed(true)}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span className="sr-only">Collapse sidebar</span>
+                </button>
+              </>
             )}
-            <button
-              title={isPageSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              className={`absolute top-3 -right-3 z-40 rounded-full bg-gray-100 dark:bg-[#232434] border border-gray-300 dark:border-gray-700 p-1 transition hover:bg-gray-200 dark:hover:bg-[#292a3c] shadow group-hover:opacity-100 opacity-0 md:opacity-100`}
-              style={{ width: 28, height: 28 }}
-              onClick={() => setPageSidebarCollapsed(v => !v)}
-            >
-              {isPageSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-              <span className="sr-only">{isPageSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}</span>
-            </button>
           </ResizablePanel>
 
           <ResizableHandle withHandle />
@@ -228,22 +237,34 @@ export const WebsiteBuilder = () => {
             minSize={sidebarPanelMinSize}
             maxSize={28}
             defaultSize={isComponentSidebarCollapsed ? collapsedSize : sidebarPanelInitSize}
-            collapsible
-            collapsed={isComponentSidebarCollapsed}
+            style={{ flexBasis: isComponentSidebarCollapsed ? `${collapsedSize}%` : undefined }}
             className={`relative bg-white dark:bg-[#191b23] border-r border-gray-200 dark:border-gray-700 transition-all h-full group`}
           >
-            {!isComponentSidebarCollapsed && (
-              <ComponentLibrary onAddElement={addElement} />
+            {isComponentSidebarCollapsed ? (
+              // Show expand button only
+              <button
+                title="Expand sidebar"
+                className="absolute top-3 -right-3 z-40 rounded-full bg-gray-100 dark:bg-[#232434] border border-gray-300 dark:border-gray-700 p-1 transition hover:bg-gray-200 dark:hover:bg-[#292a3c] shadow"
+                style={{ width: 28, height: 28 }}
+                onClick={() => setComponentSidebarCollapsed(false)}
+              >
+                <ChevronRight className="w-4 h-4" />
+                <span className="sr-only">Expand sidebar</span>
+              </button>
+            ) : (
+              <>
+                <ComponentLibrary onAddElement={addElement} />
+                <button
+                  title="Collapse sidebar"
+                  className="absolute top-3 -right-3 z-40 rounded-full bg-gray-100 dark:bg-[#232434] border border-gray-300 dark:border-gray-700 p-1 transition hover:bg-gray-200 dark:hover:bg-[#292a3c] shadow"
+                  style={{ width: 28, height: 28 }}
+                  onClick={() => setComponentSidebarCollapsed(true)}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span className="sr-only">Collapse sidebar</span>
+                </button>
+              </>
             )}
-            <button
-              title={isComponentSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              className={`absolute top-3 -right-3 z-40 rounded-full bg-gray-100 dark:bg-[#232434] border border-gray-300 dark:border-gray-700 p-1 transition hover:bg-gray-200 dark:hover:bg-[#292a3c] shadow group-hover:opacity-100 opacity-0 md:opacity-100`}
-              style={{ width: 28, height: 28 }}
-              onClick={() => setComponentSidebarCollapsed(v => !v)}
-            >
-              {isComponentSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-              <span className="sr-only">{isComponentSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}</span>
-            </button>
           </ResizablePanel>
 
           <ResizableHandle withHandle />
@@ -290,5 +311,3 @@ export const WebsiteBuilder = () => {
     </div>
   );
 };
-
-// ...end of file
