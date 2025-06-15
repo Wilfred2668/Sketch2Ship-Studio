@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Element } from '../types/builder';
-import { AccordionEditor } from './AccordionEditor';
 import { NavigationEditor } from './NavigationEditor';
+import { AccordionEditor } from './AccordionEditor';
 import { SlideshowEditor } from './SlideshowEditor';
 
 interface DraggableElementProps {
@@ -9,6 +9,8 @@ interface DraggableElementProps {
   isSelected: boolean;
   onSelect: () => void;
   onUpdate: (updates: Partial<Element>) => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
 }
 
 export const DraggableElement: React.FC<DraggableElementProps> = ({
@@ -16,57 +18,39 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
   isSelected,
   onSelect,
   onUpdate,
+  onDelete,
+  onDuplicate
 }) => {
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isEditing, setIsEditing] = useState(false);
-  const [slideshowIndex, setSlideshowIndex] = useState(0);
-  const [accordionOpenIndex, setAccordionOpenIndex] = useState<number | null>(null);
+  const elementRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
+    if (isEditing) return;
+    
+    const rect = elementRef.current?.getBoundingClientRect();
+    if (rect) {
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+    }
     setIsDragging(true);
-    setDragStart({
-      x: e.clientX - element.position.x,
-      y: e.clientY - element.position.y,
-    });
     onSelect();
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging) return;
-    
-    onUpdate({
-      position: {
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y,
-      }
-    });
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  React.useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging, dragStart]);
-
-  // Enable editing on double-click
   const handleDoubleClick = () => {
-    // Enable inline editing for text/heading/button/card
+    // Only enable editing for simple text elements
     if (['text', 'heading', 'button', 'card'].includes(element.type)) {
-      setIsEditing(true);
-    }
-    // Enable editor modal for complex components
-    if (['slideshow', 'accordion', 'navigation'].includes(element.type)) {
       setIsEditing(true);
     }
   };
@@ -86,92 +70,128 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
     return url;
   };
 
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      
+      const canvas = document.querySelector('.canvas-area');
+      if (!canvas) return;
+      
+      const canvasRect = canvas.getBoundingClientRect();
+      const newX = e.clientX - canvasRect.left - dragOffset.x;
+      const newY = e.clientY - canvasRect.top - dragOffset.y;
+      
+      onUpdate({
+        position: {
+          x: Math.max(0, newX),
+          y: Math.max(0, newY)
+        }
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragOffset, onUpdate]);
+
   // Render function for types
   const renderElement = () => {
     const commonProps = {
       style: {
         ...element.styles,
-        display: 'inline-block',
-        minWidth: element.type === 'text' ? '100px' : 'auto',
-        minHeight: element.type === 'text' ? '30px' : 'auto',
-        cursor: isDragging ? 'grabbing' : element.styles.cursor || 'pointer',
-      } as React.CSSProperties
+        left: element.position.x,
+        top: element.position.y,
+        position: 'absolute' as const,
+        cursor: isDragging ? 'grabbing' : 'grab',
+        border: isSelected ? '2px solid #3b82f6' : '1px solid transparent',
+        minWidth: '50px',
+        minHeight: '30px'
+      }
     };
 
     switch (element.type) {
       case 'text':
-        return isEditing ? (
-          <input
-            type="text"
-            value={element.content}
-            onChange={e => onUpdate({ content: e.target.value })}
-            onBlur={() => setIsEditing(false)}
-            onKeyDown={e => e.key === 'Enter' && setIsEditing(false)}
-            autoFocus
-            className="border rounded px-2 py-1 w-full bg-background"
-            style={element.styles as React.CSSProperties}
-          />
-        ) : (
-          <span {...commonProps}>{element.content}</span>
-        );
-      case 'heading':
-        return isEditing ? (
-          <input
-            type="text"
-            value={element.content}
-            onChange={e => onUpdate({ content: e.target.value })}
-            onBlur={() => setIsEditing(false)}
-            onKeyDown={e => e.key === 'Enter' && setIsEditing(false)}
-            autoFocus
-            className="border rounded text-2xl font-bold px-2 py-1 w-full bg-background"
-            style={element.styles as React.CSSProperties}
-          />
-        ) : (
-          <h2 {...commonProps}>{element.content}</h2>
-        );
-      case 'button':
-        return isEditing ? (
-          <input
-            type="text"
-            value={element.content}
-            onChange={e => onUpdate({ content: e.target.value })}
-            onBlur={() => setIsEditing(false)}
-            onKeyDown={e => e.key === 'Enter' && setIsEditing(false)}
-            autoFocus
-            className="border rounded px-2 py-1 w-full bg-background"
-            style={element.styles as React.CSSProperties}
-          />
-        ) : (
-          <button {...commonProps}>{element.content}</button>
-        );
-      case 'link':
-        return isEditing ? (
-          <input
-            type="text"
-            value={element.content}
-            onChange={e => onUpdate({ content: e.target.value })}
-            onBlur={() => setIsEditing(false)}
-            onKeyDown={e => e.key === 'Enter' && setIsEditing(false)}
-            autoFocus
-            className="border rounded px-2 py-1 w-full bg-background"
-            style={element.styles as React.CSSProperties}
-          />
-        ) : (
-          <a {...commonProps} href="#" onClick={e => e.preventDefault()}>{element.content}</a>
-        );
-      case 'image':
         return (
-          <div 
-            {...commonProps}
-            className="bg-gray-200 border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-500"
-          >
-            {element.content ? (
-              <img src={element.content} alt="Uploaded" className="w-full h-full object-cover" />
+          <div {...commonProps}>
+            {isEditing ? (
+              <input
+                ref={inputRef}
+                value={element.content}
+                onChange={(e) => handleContentChange(e.target.value)}
+                onBlur={() => setIsEditing(false)}
+                onKeyDown={(e) => e.key === 'Enter' && setIsEditing(false)}
+                className="border-none outline-none bg-transparent w-full"
+              />
             ) : (
-              <span>Image Placeholder</span>
+              <span>{element.content}</span>
             )}
           </div>
         );
+
+      case 'heading':
+        return (
+          <h1 {...commonProps}>
+            {isEditing ? (
+              <input
+                ref={inputRef}
+                value={element.content}
+                onChange={(e) => handleContentChange(e.target.value)}
+                onBlur={() => setIsEditing(false)}
+                onKeyDown={(e) => e.key === 'Enter' && setIsEditing(false)}
+                className="border-none outline-none bg-transparent w-full text-inherit font-inherit"
+              />
+            ) : (
+              element.content
+            )}
+          </h1>
+        );
+
+      case 'button':
+        return (
+          <button {...commonProps} style={{ ...commonProps.style, cursor: 'pointer' }}>
+            {isEditing ? (
+              <input
+                ref={inputRef}
+                value={element.content}
+                onChange={(e) => handleContentChange(e.target.value)}
+                onBlur={() => setIsEditing(false)}
+                onKeyDown={(e) => e.key === 'Enter' && setIsEditing(false)}
+                className="border-none outline-none bg-transparent text-inherit font-inherit"
+              />
+            ) : (
+              element.content
+            )}
+          </button>
+        );
+
+      case 'link':
+        return (
+          <a {...commonProps} href="#" style={{ ...commonProps.style, cursor: 'pointer' }}>
+            {element.content}
+          </a>
+        );
+
+      case 'image':
+        return (
+          <div {...commonProps} className="border-2 border-dashed border-gray-300 flex items-center justify-center">
+            {element.content ? (
+              <img src={element.content} alt="" className="max-w-full max-h-full object-contain" />
+            ) : (
+              <span className="text-gray-500">Image Placeholder</span>
+            )}
+          </div>
+        );
+
       case 'video':
         const isYouTube = element.content.includes('youtube.com') || element.content.includes('youtu.be');
         
@@ -197,270 +217,233 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
             )}
           </div>
         );
+
       case 'icon':
-        return isEditing ? (
-          <input
-            type="text"
-            value={element.content}
-            onChange={e => onUpdate({ content: e.target.value })}
-            onBlur={() => setIsEditing(false)}
-            onKeyDown={e => e.key === 'Enter' && setIsEditing(false)}
-            autoFocus
-            className="border rounded px-2 py-1 w-full bg-background text-center"
-            style={element.styles as React.CSSProperties}
-          />
-        ) : (
-          <span {...commonProps}>{element.content}</span>
-        );
-      case 'slideshow':
-        const images = element.content.split('\n').filter(img => img.trim());
-        
-        if (isEditing) {
-          return (
-            <div className="p-4 bg-white border border-gray-300 rounded-lg min-w-[400px]">
-              <SlideshowEditor
-                images={images}
-                onUpdate={(newImages) => {
-                  const newContent = newImages.join('\n');
-                  onUpdate({ content: newContent });
-                }}
-              />
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                  Done
-                </button>
-              </div>
-            </div>
-          );
-        }
-        
         return (
-          <div {...commonProps} className="relative bg-gray-100 border border-gray-300 rounded overflow-hidden">
+          <div {...commonProps} className="flex items-center justify-center">
+            <span style={{ fontSize: element.styles.fontSize || '24px' }}>
+              {element.content || '⭐'}
+            </span>
+          </div>
+        );
+
+      case 'divider':
+        return (
+          <hr 
+            {...commonProps} 
+            style={{ 
+              ...commonProps.style, 
+              width: element.styles.width || '200px', 
+              height: '2px',
+              backgroundColor: element.styles.backgroundColor || '#ddd',
+              border: 'none'
+            }} 
+          />
+        );
+
+      case 'spacer':
+        return (
+          <div 
+            {...commonProps} 
+            style={{ 
+              ...commonProps.style, 
+              backgroundColor: 'transparent',
+              border: isSelected ? '2px dashed #3b82f6' : '1px dashed #ccc'
+            }}
+          >
+            <span className="text-gray-400 text-xs">Spacer</span>
+          </div>
+        );
+
+      case 'card':
+        return (
+          <div {...commonProps} className="shadow-lg">
+            {isEditing ? (
+              <div className="p-4">
+                <textarea
+                  value={element.content}
+                  onChange={(e) => handleContentChange(e.target.value)}
+                  onBlur={() => setIsEditing(false)}
+                  className="w-full h-20 border-none outline-none bg-transparent resize-none"
+                  autoFocus
+                />
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4">{element.content}</div>
+            )}
+          </div>
+        );
+
+      case 'list':
+        const listItems = element.content.split('\n').filter(Boolean);
+        return (
+          <ul {...commonProps} className="list-disc list-inside space-y-1">
+            {listItems.map((item, index) => (
+              <li key={index}>{item}</li>
+            ))}
+          </ul>
+        );
+
+      case 'quote':
+        return (
+          <blockquote {...commonProps} className="italic border-l-4 border-blue-500 pl-4">
+            "{element.content}"
+          </blockquote>
+        );
+
+      case 'slideshow':
+        const images = element.content ? element.content.split('\n').filter(Boolean) : [];
+        const [currentImageIndex, setCurrentImageIndex] = useState(0);
+        
+        useEffect(() => {
+          if (images.length > 1) {
+            const interval = setInterval(() => {
+              setCurrentImageIndex((prev) => (prev + 1) % images.length);
+            }, 3000);
+            return () => clearInterval(interval);
+          }
+        }, [images.length]);
+
+        return (
+          <div {...commonProps} className="relative overflow-hidden bg-gray-100 border border-gray-300">
             {images.length > 0 ? (
               <>
                 <img 
-                  src={images[slideshowIndex] || images[0]} 
-                  alt={`Slide ${slideshowIndex + 1}`} 
-                  className="w-full h-full object-cover" 
+                  src={images[currentImageIndex]} 
+                  alt={`Slide ${currentImageIndex + 1}`}
+                  className="w-full h-full object-cover"
                 />
-                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
-                  {images.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSlideshowIndex(index)}
-                      className={`w-2 h-2 rounded-full ${index === slideshowIndex ? 'bg-white' : 'bg-white/50'}`}
-                    />
-                  ))}
-                </div>
                 {images.length > 1 && (
-                  <>
-                    <button
-                      onClick={() => setSlideshowIndex((prev) => (prev - 1 + images.length) % images.length)}
-                      className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center"
-                    >
-                      ‹
-                    </button>
-                    <button
-                      onClick={() => setSlideshowIndex((prev) => (prev + 1) % images.length)}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center"
-                    >
-                      ›
-                    </button>
-                  </>
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1">
+                    {images.map((_, index) => (
+                      <div
+                        key={index}
+                        className={`w-2 h-2 rounded-full ${
+                          index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                        }`}
+                      />
+                    ))}
+                  </div>
                 )}
               </>
             ) : (
               <div className="flex items-center justify-center h-full text-gray-500">
-                Slideshow Placeholder
+                <span>Slideshow Placeholder</span>
               </div>
             )}
           </div>
         );
+
       case 'accordion':
-        const sections = element.content.split('\n').filter(section => section.trim()).map(section => {
-          const [title, content] = section.split('|');
-          return { title: title?.trim() || 'Section', content: content?.trim() || 'Content' };
-        });
-        
-        if (isEditing) {
-          return (
-            <div className="p-4 bg-white border border-gray-300 rounded-lg min-w-[350px]">
-              <AccordionEditor
-                sections={sections}
-                onUpdate={(newSections) => {
-                  const newContent = newSections.map(s => `${s.title}|${s.content}`).join('\n');
-                  onUpdate({ content: newContent });
-                }}
-              />
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                  Done
-                </button>
-              </div>
-            </div>
+        const sections = element.content ? element.content.split('\n').filter(Boolean) : [];
+        const [openSections, setOpenSections] = useState<number[]>([]);
+
+        const toggleSection = (index: number) => {
+          setOpenSections(prev => 
+            prev.includes(index) 
+              ? prev.filter(i => i !== index)
+              : [...prev, index]
           );
-        }
-        
+        };
+
         return (
           <div {...commonProps} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            {sections.map((section, index) => (
-              <div key={index} className="border-b border-gray-200 last:border-b-0">
-                <button
-                  onClick={() => setAccordionOpenIndex(accordionOpenIndex === index ? null : index)}
-                  className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 flex justify-between items-center"
-                >
-                  <span className="font-medium">{section.title}</span>
-                  <span className={`transform transition-transform ${accordionOpenIndex === index ? 'rotate-180' : ''}`}>
-                    ▼
-                  </span>
-                </button>
-                {accordionOpenIndex === index && (
-                  <div className="px-4 py-3 bg-white">
-                    {section.content}
+            {sections.length > 0 ? (
+              sections.map((section, index) => {
+                const [title, content] = section.split('|');
+                const isOpen = openSections.includes(index);
+                
+                return (
+                  <div key={index} className="border-b border-gray-200 last:border-b-0">
+                    <button
+                      className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 font-medium text-sm"
+                      onClick={() => toggleSection(index)}
+                    >
+                      <div className="flex justify-between items-center">
+                        <span>{title || `Section ${index + 1}`}</span>
+                        <span className={`transform transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+                          ▼
+                        </span>
+                      </div>
+                    </button>
+                    {isOpen && (
+                      <div className="px-4 py-3 text-sm text-gray-700">
+                        {content || 'Content here...'}
+                      </div>
+                    )}
                   </div>
-                )}
+                );
+              })
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500 p-4">
+                <span>Accordion Placeholder</span>
               </div>
-            ))}
+            )}
           </div>
         );
+
       case 'navigation':
-        const navItems = element.content.split('\n').filter(item => item.trim()).map(item => {
-          const [label, url] = item.split('|');
-          return { label: label?.trim() || 'Link', url: url?.trim() || '#' };
-        });
-        
-        if (isEditing) {
-          return (
-            <div className="p-4 bg-white border border-gray-300 rounded-lg min-w-[400px]">
-              <NavigationEditor
-                items={navItems}
-                onUpdate={(newItems) => {
-                  const newContent = newItems.map(item => `${item.label}|${item.url}`).join('\n');
-                  onUpdate({ content: newContent });
-                }}
-              />
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                  Done
-                </button>
-              </div>
-            </div>
-          );
-        }
+        const navItems = element.content ? element.content.split('\n').filter(Boolean) : [];
         
         return (
-          <nav {...commonProps} className="bg-white border-b border-gray-200 w-full">
-            <div className="flex items-center justify-between px-6 py-3">
-              <div className="flex items-center space-x-8">
-                {navItems.map((item, index) => (
-                  <a
-                    key={index}
-                    href={item.url}
-                    onClick={e => e.preventDefault()}
-                    className="text-gray-700 hover:text-gray-900 font-medium"
-                  >
-                    {item.label}
-                  </a>
-                ))}
+          <nav {...commonProps} className="bg-white border border-gray-200">
+            {navItems.length > 0 ? (
+              <ul className="flex space-x-0">
+                {navItems.map((item, index) => {
+                  const [label, url] = item.split('|');
+                  return (
+                    <li key={index}>
+                      <a 
+                        href={url || '#'} 
+                        className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 border-r border-gray-200 last:border-r-0"
+                      >
+                        {label || `Link ${index + 1}`}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500 p-4">
+                <span>Navigation Placeholder</span>
               </div>
-            </div>
+            )}
           </nav>
         );
-      case 'divider':
-        return (
-          <div className="w-full flex flex-col items-center py-2" {...commonProps}>
-            {element.content && <span className="text-xs text-muted-foreground mb-1">{element.content}</span>}
-            <hr className="w-32 border-t border-gray-400" />
-          </div>
-        );
-      case 'spacer':
-        return (
-          <div {...commonProps} className="bg-transparent border border-dashed border-gray-300 flex items-center justify-center text-gray-400 min-h-[40px]">
-            {isSelected ? 'Spacer' : ''}
-          </div>
-        );
-      case 'card':
-        return isEditing ? (
-          <textarea
-            value={element.content}
-            onChange={e => onUpdate({ content: e.target.value })}
-            onBlur={() => setIsEditing(false)}
-            rows={3}
-            autoFocus
-            className="border rounded p-2 w-full bg-background"
-          />
-        ) : (
-          <div {...commonProps} className="bg-white/90 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-4 min-w-[160px] min-h-[80px] shadow-sm">
-            {element.content}
-          </div>
-        );
-      case 'list':
-        return isEditing ? (
-          <textarea
-            value={element.content}
-            onChange={e => onUpdate({ content: e.target.value })}
-            onBlur={() => setIsEditing(false)}
-            rows={4}
-            autoFocus
-            className="border rounded p-2 w-full bg-background"
-            placeholder="Enter each item on a new line"
-          />
-        ) : (
-          <ul {...commonProps} className="list-disc list-inside space-y-1">
-            {element.content.split('\n').filter(item => item.trim()).map((item, index) => (
-              <li key={index}>{item.trim()}</li>
-            ))}
-          </ul>
-        );
-      case 'quote':
-        return isEditing ? (
-          <textarea
-            value={element.content}
-            onChange={e => onUpdate({ content: e.target.value })}
-            onBlur={() => setIsEditing(false)}
-            rows={3}
-            autoFocus
-            className="border rounded p-2 w-full bg-background"
-          />
-        ) : (
-          <blockquote {...commonProps} className="border-l-4 border-blue-500 bg-gray-50 dark:bg-gray-800 p-4 italic">
-            "{element.content}"
-          </blockquote>
-        );
+
       default:
-        return <div {...commonProps}>{element.content}</div>;
+        return (
+          <div {...commonProps}>
+            <span>{element.content || element.type}</span>
+          </div>
+        );
     }
   };
 
   return (
     <div
-      className={`absolute cursor-move select-none ${
-        isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : ''
-      } ${isDragging ? 'opacity-75' : ''}`}
-      style={{
-        left: element.position.x,
-        top: element.position.y,
-        zIndex: isSelected ? 10 : 1,
-      }}
+      ref={elementRef}
       onMouseDown={handleMouseDown}
-      onClick={onSelect}
       onDoubleClick={handleDoubleClick}
-      tabIndex={0}
+      className={`element ${isSelected ? 'selected' : ''}`}
     >
       {renderElement()}
       
       {isSelected && (
-        <div className="absolute -top-8 left-0 bg-blue-500 text-white px-2 py-1 rounded text-xs">
-          {element.type}
+        <div 
+          className="absolute -top-8 left-0 flex gap-1 bg-blue-500 text-white text-xs px-2 py-1 rounded z-10"
+          style={{ fontSize: '10px' }}
+        >
+          <button onClick={onDuplicate} className="hover:bg-blue-600 px-1 rounded">Copy</button>
+          <button onClick={onDelete} className="hover:bg-red-600 px-1 rounded">Delete</button>
         </div>
       )}
     </div>
