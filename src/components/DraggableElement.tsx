@@ -114,6 +114,50 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
     };
   }, [isDragging, dragOffset, onUpdate, element.id]);
 
+  // Helper to check if element is resizable
+  const isResizableType = ['image', 'video', 'card', 'slideshow', 'divider', 'spacer', 'list', 'quote'].includes(element.type);
+
+  // Handle resizing
+  const [resizing, setResizing] = useState<{ direction: "right" | "bottom" | null }>({ direction: null });
+  const [resizeStart, setResizeStart] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+
+  useEffect(() => {
+    if (!resizing.direction) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!elementRef.current || !resizeStart) return;
+
+      let newWidth = parseInt(resizeStart.width as any, 10) || elementRef.current.offsetWidth;
+      let newHeight = parseInt(resizeStart.height as any, 10) || elementRef.current.offsetHeight;
+      if (resizing.direction === "right") {
+        newWidth = Math.max(30, resizeStart.width + (e.clientX - resizeStart.x));
+      }
+      if (resizing.direction === "bottom") {
+        newHeight = Math.max(30, resizeStart.height + (e.clientY - resizeStart.y));
+      }
+      // Update instantly for feel, but throttle updates if needed
+      onUpdate({
+        styles: {
+          ...element.styles,
+          width: newWidth + 'px',
+          height: newHeight + 'px'
+        }
+      });
+    };
+
+    const handleMouseUp = () => {
+      setResizing({ direction: null });
+      setResizeStart(null);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [resizing, resizeStart, onUpdate, element.styles]);
+
   // Render function for types
   const renderElement = () => {
     const commonProps = {
@@ -438,6 +482,96 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
     }
   };
 
+  // Helper to add resize handles to any JSX block
+  const withResizeHandles = (children: React.ReactNode) => {
+    // Only show handles if selected & resizable
+    if (!isResizableType || !isSelected) return children;
+    return (
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        {children}
+        {/* Right handle */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: -6,
+            width: 12,
+            height: '100%',
+            cursor: 'ew-resize',
+            zIndex: 2,
+            background: 'transparent',
+            pointerEvents: 'all',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          onMouseDown={e => {
+            e.stopPropagation();
+            setResizing({ direction: "right" });
+            setResizeStart({
+              x: e.clientX,
+              y: e.clientY,
+              width: parseInt(element.styles.width as any, 10) || elementRef.current?.offsetWidth || 100,
+              height: parseInt(element.styles.height as any, 10) || elementRef.current?.offsetHeight || 50
+            });
+          }}
+        >
+          <div className="w-2 h-8 rounded bg-blue-400 opacity-60 hover:opacity-100 transition" />
+        </div>
+        {/* Bottom handle */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            bottom: -6,
+            width: '100%',
+            height: 12,
+            cursor: 'ns-resize',
+            zIndex: 2,
+            background: 'transparent',
+            pointerEvents: 'all',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          onMouseDown={e => {
+            e.stopPropagation();
+            setResizing({ direction: "bottom" });
+            setResizeStart({
+              x: e.clientX,
+              y: e.clientY,
+              width: parseInt(element.styles.width as any, 10) || elementRef.current?.offsetWidth || 100,
+              height: parseInt(element.styles.height as any, 10) || elementRef.current?.offsetHeight || 50
+            });
+          }}
+        >
+          <div className="h-2 w-8 rounded bg-blue-400 opacity-60 hover:opacity-100 transition" />
+        </div>
+      </div>
+    );
+  };
+
+  // Wrap rendered content if needed
+  const wrapIfResizable = (node: React.ReactNode) => {
+    if (isResizableType) {
+      // Use a relative container so handles are positioned right,
+      // set width/height from styles
+      return (
+        <div
+          style={{
+            width: element.styles.width || undefined,
+            height: element.styles.height || undefined,
+            position: 'relative'
+          }}
+        >
+          {node}
+          {withResizeHandles(null)}
+        </div>
+      );
+    }
+    return node;
+  };
+
   return (
     <div
       ref={elementRef}
@@ -445,8 +579,8 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
       onDoubleClick={handleDoubleClick}
       className={`element ${isSelected ? 'selected' : ''}`}
     >
-      {renderElement()}
-      
+      {wrapIfResizable(renderElement())}
+
       {isSelected && (
         <div 
           className="absolute -top-8 left-0 flex gap-1 bg-blue-500 text-white text-xs px-2 py-1 rounded z-10"
