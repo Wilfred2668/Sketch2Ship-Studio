@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { ComponentLibrary } from './ComponentLibrary';
 import { Canvas } from './Canvas';
@@ -8,7 +9,6 @@ import { PageSidebar } from './PageSidebar';
 import { useUndoRedo } from '../hooks/useUndoRedo';
 import { PropertiesPanel } from './PropertiesPanel';
 import { PreviewModal } from './PreviewModal';
-import { SidebarProvider, Sidebar, SidebarContent, SidebarTrigger } from './ui/sidebar';
 
 export interface Page {
   id: string;
@@ -176,64 +176,56 @@ export const WebsiteBuilder = () => {
         onPreview={() => setShowPreviewModal(true)}
       />
       
-      <SidebarProvider>
-        <div className="flex flex-1 h-[calc(100vh-64px)] w-full">
-          {/* PAGES SIDEBAR */}
-          <Sidebar side="left" className="border-r border-gray-200 dark:border-gray-700">
-            <SidebarContent className="bg-white dark:bg-[#181928] p-0">
-              <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700">
-                <SidebarTrigger />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Pages</span>
-              </div>
-              <PageSidebar
-                pages={pages}
-                currentPageId={currentPageId}
-                setCurrentPageId={setCurrentPageId}
-                addPage={addPage}
-                deletePage={deletePage}
-                renamePage={renamePage}
-              />
-            </SidebarContent>
-          </Sidebar>
-
-          {/* COMPONENT LIBRARY SIDEBAR */}
-          <Sidebar side="left" className="border-r border-gray-200 dark:border-gray-700">
-            <SidebarContent className="bg-white dark:bg-[#191b23] p-0">
-              <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700">
-                <SidebarTrigger />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Components</span>
-              </div>
-              <ComponentLibrary onAddElement={addElement} />
-            </SidebarContent>
-          </Sidebar>
-
-          {/* CANVAS AREA */}
-          <main className="flex-1 min-w-0 bg-transparent">
-            <Canvas
-              elements={elements}
-              selectedElement={selectedElement}
-              onSelectElement={setSelectedElement}
-              onUpdateElement={updateElement}
-              onDeleteElement={deleteElement}
-              onDuplicateElement={duplicateElement}
-              onUndo={undo}
-              onRedo={redo}
-              canUndo={canUndo}
-              canRedo={canRedo}
-            />
-          </main>
-
-          {/* PROPERTIES PANEL */}
-          {selectedElement && (
-            <PropertiesPanel
-              element={elements.find(el => el.id === selectedElement)!}
-              onUpdate={updates => updateElement(selectedElement, updates)}
-              onClose={() => setSelectedElement(null)}
-              theme={theme}
-            />
-          )}
+      <div className="flex flex-1 h-[calc(100vh-64px)] w-full">
+        {/* PAGES SIDEBAR */}
+        <div className="w-64 bg-white dark:bg-[#181928] border-r border-gray-200 dark:border-gray-700 flex flex-col">
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Pages</span>
+          </div>
+          <PageSidebar
+            pages={pages}
+            currentPageId={currentPageId}
+            setCurrentPageId={setCurrentPageId}
+            addPage={addPage}
+            deletePage={deletePage}
+            renamePage={renamePage}
+          />
         </div>
-      </SidebarProvider>
+
+        {/* COMPONENT LIBRARY SIDEBAR */}
+        <div className="w-64 bg-white dark:bg-[#191b23] border-r border-gray-200 dark:border-gray-700 flex flex-col">
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Components</span>
+          </div>
+          <ComponentLibrary onAddElement={addElement} />
+        </div>
+
+        {/* CANVAS AREA */}
+        <main className="flex-1 min-w-0 bg-transparent">
+          <Canvas
+            elements={elements}
+            selectedElement={selectedElement}
+            onSelectElement={setSelectedElement}
+            onUpdateElement={updateElement}
+            onDeleteElement={deleteElement}
+            onDuplicateElement={duplicateElement}
+            onUndo={undo}
+            onRedo={redo}
+            canUndo={canUndo}
+            canRedo={canRedo}
+          />
+        </main>
+
+        {/* PROPERTIES PANEL */}
+        {selectedElement && (
+          <PropertiesPanel
+            element={elements.find(el => el.id === selectedElement)!}
+            onUpdate={updates => updateElement(selectedElement, updates)}
+            onClose={() => setSelectedElement(null)}
+            theme={theme}
+          />
+        )}
+      </div>
 
       {showExportModal && (
         <ExportModal
