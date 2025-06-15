@@ -35,7 +35,7 @@ export const AccordionEditor: React.FC<AccordionEditorProps> = ({ sections, onUp
     <div className="space-y-3">
       <div className="flex justify-between items-center">
         <h3 className="text-sm font-medium">Accordion Sections</h3>
-        <Button size="sm" onClick={addSection} className="flex items-center gap-1">
+        <Button size="sm" onClick={addSection} className="flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white">
           <Plus className="w-3 h-3" />
           Add Section
         </Button>

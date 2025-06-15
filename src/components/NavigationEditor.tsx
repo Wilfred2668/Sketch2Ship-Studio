@@ -35,7 +35,7 @@ export const NavigationEditor: React.FC<NavigationEditorProps> = ({ items, onUpd
     <div className="space-y-3">
       <div className="flex justify-between items-center">
         <h3 className="text-sm font-medium">Navigation Items</h3>
-        <Button size="sm" onClick={addItem} className="flex items-center gap-1">
+        <Button size="sm" onClick={addItem} className="flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white">
           <Plus className="w-3 h-3" />
           Add Link
         </Button>

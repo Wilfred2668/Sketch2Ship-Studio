@@ -65,12 +65,25 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
     if (['text', 'heading', 'button', 'card'].includes(element.type)) {
       setIsEditing(true);
     }
+    // Enable editor modal for complex components
+    if (['slideshow', 'accordion', 'navigation'].includes(element.type)) {
+      setIsEditing(true);
+    }
   };
 
   // Finish editing on blur or Enter
   const handleContentChange = (newContent: string) => {
     onUpdate({ content: newContent });
     setIsEditing(false);
+  };
+
+  // Helper function to convert YouTube URL to embed URL
+  const getYouTubeEmbedUrl = (url: string) => {
+    const videoIdMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
+    if (videoIdMatch) {
+      return `https://www.youtube.com/embed/${videoIdMatch[1]}`;
+    }
+    return url;
   };
 
   // Render function for types
@@ -160,13 +173,25 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
           </div>
         );
       case 'video':
+        const isYouTube = element.content.includes('youtube.com') || element.content.includes('youtu.be');
+        
         return (
           <div 
             {...commonProps}
             className="bg-black border-2 border-dashed border-gray-300 flex items-center justify-center text-white"
           >
             {element.content ? (
-              <video src={element.content} controls className="w-full h-full" />
+              isYouTube ? (
+                <iframe
+                  src={getYouTubeEmbedUrl(element.content)}
+                  className="w-full h-full"
+                  frameBorder="0"
+                  allowFullScreen
+                  title="YouTube video"
+                />
+              ) : (
+                <video src={element.content} controls className="w-full h-full" />
+              )
             ) : (
               <span>Video Placeholder</span>
             )}
@@ -203,7 +228,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded"
+                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
                   Done
                 </button>
@@ -273,7 +298,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded"
+                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
                   Done
                 </button>
@@ -323,7 +348,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded"
+                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
                   Done
                 </button>
