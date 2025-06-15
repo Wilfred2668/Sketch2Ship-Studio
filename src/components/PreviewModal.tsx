@@ -5,7 +5,8 @@ import { X } from 'lucide-react';
 
 // Preview just renders the elements as static for now:
 const renderElement = (el: Element) => {
-  const style = { ...el.styles, position: 'absolute', left: el.position.x, top: el.position.y };
+  // Ensure position is "absolute" as a const (TypeScript friendly)
+  const style = { ...el.styles, position: "absolute" as const, left: el.position.x, top: el.position.y };
   switch (el.type) {
     case 'text':
       return <span key={el.id} style={style}>{el.content}</span>;

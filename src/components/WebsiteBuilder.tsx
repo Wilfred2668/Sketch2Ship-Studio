@@ -166,6 +166,9 @@ export const WebsiteBuilder = () => {
     }
   }, [theme]);
 
+  // Fix: open PropertiesPanel when an element is selected/clicked
+  // This is already managed with selectedElement, but ensure PropertiesPanel is rendered from the right spot
+
   return (
     <div className={`min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[#16171a] dark:to-[#101215] flex flex-col transition-colors ${theme === 'dark' ? 'dark' : ''}`}>
       <Header 
@@ -175,28 +178,36 @@ export const WebsiteBuilder = () => {
         onPreview={() => setShowPreviewModal(true)}
       />
       <div className="flex flex-1 h-[calc(100vh-64px)]">
-        <PageSidebar
-          pages={pages}
-          currentPageId={currentPageId}
-          setCurrentPageId={setCurrentPageId}
-          addPage={addPage}
-          deletePage={deletePage}
-          renamePage={renamePage}
-        />
-        <ComponentLibrary onAddElement={addElement} />
-
-        <Canvas
-          elements={elements}
-          selectedElement={selectedElement}
-          onSelectElement={setSelectedElement}
-          onUpdateElement={updateElement}
-          onDeleteElement={deleteElement}
-          onDuplicateElement={duplicateElement}
-          onUndo={undo}
-          onRedo={redo}
-          canUndo={canUndo}
-          canRedo={canRedo}
-        />
+        {/* Sidebar */}
+        <div className="z-30 relative">
+          <PageSidebar
+            pages={pages}
+            currentPageId={currentPageId}
+            setCurrentPageId={setCurrentPageId}
+            addPage={addPage}
+            deletePage={deletePage}
+            renamePage={renamePage}
+          />
+        </div>
+        {/* Component Library Sidebar */}
+        <div className="z-20 relative w-80 shrink-0">
+          <ComponentLibrary onAddElement={addElement} />
+        </div>
+        {/* Canvas */}
+        <div className="flex-1 min-w-0 z-10 relative">
+          <Canvas
+            elements={elements}
+            selectedElement={selectedElement}
+            onSelectElement={setSelectedElement}
+            onUpdateElement={updateElement}
+            onDeleteElement={deleteElement}
+            onDuplicateElement={duplicateElement}
+            onUndo={undo}
+            onRedo={redo}
+            canUndo={canUndo}
+            canRedo={canRedo}
+          />
+        </div>
 
         {/* Properties Panel */}
         {selectedElement && (
