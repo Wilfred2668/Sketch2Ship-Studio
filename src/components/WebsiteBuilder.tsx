@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { ComponentLibrary } from './ComponentLibrary';
 import { Canvas } from './Canvas';
@@ -179,11 +178,12 @@ export const WebsiteBuilder = () => {
       
       <SidebarProvider>
         <div className="flex flex-1 h-[calc(100vh-64px)] w-full">
-          {/* PAGE SIDEBAR */}
+          {/* PAGES SIDEBAR */}
           <Sidebar side="left" className="border-r border-gray-200 dark:border-gray-700">
-            <SidebarContent className="bg-white dark:bg-[#181928]">
-              <div className="flex items-center justify-between p-2 border-b">
+            <SidebarContent className="bg-white dark:bg-[#181928] p-0">
+              <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700">
                 <SidebarTrigger />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Pages</span>
               </div>
               <PageSidebar
                 pages={pages}
@@ -198,9 +198,10 @@ export const WebsiteBuilder = () => {
 
           {/* COMPONENT LIBRARY SIDEBAR */}
           <Sidebar side="left" className="border-r border-gray-200 dark:border-gray-700">
-            <SidebarContent className="bg-white dark:bg-[#191b23]">
-              <div className="flex items-center justify-between p-2 border-b">
+            <SidebarContent className="bg-white dark:bg-[#191b23] p-0">
+              <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700">
                 <SidebarTrigger />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Components</span>
               </div>
               <ComponentLibrary onAddElement={addElement} />
             </SidebarContent>

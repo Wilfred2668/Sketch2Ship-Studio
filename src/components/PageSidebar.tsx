@@ -24,12 +24,11 @@ export const PageSidebar: React.FC<PageSidebarProps> = ({
   const [inputValue, setInputValue] = useState<string>('');
 
   return (
-    <div className="w-56 bg-white border-r border-gray-200 flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b">
-        <div className="font-bold text-gray-700">Pages</div>
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <button
           title="Add Page"
-          className="bg-gradient-to-br from-blue-400 to-purple-400 text-white rounded p-1.5"
+          className="bg-gradient-to-br from-blue-400 to-purple-400 text-white rounded p-1.5 hover:from-blue-500 hover:to-purple-500 transition-colors"
           onClick={addPage}
         >
           <Plus className="w-4 h-4" />
@@ -39,8 +38,8 @@ export const PageSidebar: React.FC<PageSidebarProps> = ({
         {pages.map((page) => (
           <div
             key={page.id}
-            className={`flex items-center group px-4 py-2 border-b hover:bg-gray-100 transition cursor-pointer ${
-              page.id === currentPageId ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+            className={`flex items-center group px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer ${
+              page.id === currentPageId ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-500' : ''
             }`}
             onClick={() => setCurrentPageId(page.id)}
           >
@@ -59,13 +58,13 @@ export const PageSidebar: React.FC<PageSidebarProps> = ({
                     setEditingId(null);
                   }
                 }}
-                className="border rounded px-1 py-0.5 w-full text-sm"
+                className="border rounded px-2 py-1 w-full text-sm bg-white dark:bg-gray-800 dark:text-white dark:border-gray-600"
               />
             ) : (
               <>
-                <span className="flex-1 text-sm truncate">{page.name}</span>
+                <span className="flex-1 text-sm truncate text-gray-700 dark:text-gray-300">{page.name}</span>
                 <button
-                  className="ml-1 p-1 rounded hover:bg-gray-200"
+                  className="ml-2 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={e => {
                     e.stopPropagation();
                     setEditingId(page.id);
@@ -73,11 +72,11 @@ export const PageSidebar: React.FC<PageSidebarProps> = ({
                   }}
                   title="Rename Page"
                 >
-                  <Edit className="w-3 h-3" />
+                  <Edit className="w-3 h-3 text-gray-600 dark:text-gray-400" />
                 </button>
                 {pages.length > 1 && (
                   <button
-                    className="ml-1 p-1 rounded hover:bg-red-100"
+                    className="ml-1 p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={e => {
                       e.stopPropagation();
                       deletePage(page.id);
