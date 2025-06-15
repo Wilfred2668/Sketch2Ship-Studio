@@ -38,7 +38,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   return (
     <div className="flex-1 relative min-h-0">
       <div
-        className="w-full h-full overflow-auto"
+        className="w-full h-full overflow-auto canvas-area"
         style={{
           backgroundImage: `
             radial-gradient(circle at 25px 25px, rgba(0,0,0,0.05) 2px, transparent 2px),
@@ -76,6 +76,8 @@ export const Canvas: React.FC<CanvasProps> = ({
               isSelected={selectedElement === element.id}
               onSelect={() => onSelectElement(element.id)}
               onUpdate={(updates) => onUpdateElement(element.id, updates)}
+              onDelete={() => onDeleteElement(element.id)}
+              onDuplicate={() => onDuplicateElement(element.id)}
             />
           ))}
         </div>
