@@ -118,8 +118,8 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
   const isResizableType = ['image', 'video', 'card', 'slideshow', 'divider', 'spacer', 'list', 'quote'].includes(element.type);
 
   // Handle resizing
-  const [resizing, setResizing<{ direction: "right" | "bottom" | null }>({ direction: null });
-  const [resizeStart, setResizeStart<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [resizing, setResizing] = useState<{ direction: "right" | "bottom" | null }>({ direction: null });
+  const [resizeStart, setResizeStart] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
 
   useEffect(() => {
     if (!resizing.direction) return;
