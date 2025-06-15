@@ -398,11 +398,11 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
 
       case 'accordion':
         const sections = element.content ? element.content.split('\n').filter(Boolean) : [];
-        const [openSections, setOpenSections<number[]>([]);
+        const [openSections, setOpenSections] = useState<number[]>([]);
 
         const toggleSection = (index: number) => {
-          setOpenSections(prev => 
-            prev.includes(index) 
+          setOpenSections(prev =>
+            prev.includes(index)
               ? prev.filter(i => i !== index)
               : [...prev, index]
           );
@@ -414,7 +414,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
               sections.map((section, index) => {
                 const [title, content] = section.split('|');
                 const isOpen = openSections.includes(index);
-                
+
                 return (
                   <div key={index} className="border-b border-gray-200 last:border-b-0">
                     <button
