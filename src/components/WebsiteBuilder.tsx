@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { ComponentLibrary } from './ComponentLibrary';
 import { Canvas } from './Canvas';
@@ -24,6 +23,7 @@ export const WebsiteBuilder = () => {
   const [currentPageId, setCurrentPageId] = useState(pages[0].id);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   const { snapshots, saveSnapshot, undo, redo, canUndo, canRedo } = useUndoRedo(
     pages, setPages
@@ -113,6 +113,8 @@ export const WebsiteBuilder = () => {
       case 'heading': return 'Your Heading';
       case 'button': return 'Click Me';
       case 'image': return '';
+      case 'divider': return '';
+      case 'card': return 'Card content goes here...';
       default: return '';
     }
   }
@@ -141,14 +143,31 @@ export const WebsiteBuilder = () => {
         };
       case 'image':
         return { ...base, width: '200px', height: '150px' };
+      case 'divider':
+        return { ...base, backgroundColor: 'transparent', padding: '2px', border: 'none' };
+      case 'card':
+        return { ...base, backgroundColor: '#f8fafc', border: '1px solid #d1d5db', borderRadius: '10px', padding: '20px', minWidth: '160px', minHeight: '80px' };
       default:
         return base;
     }
   }
 
+  // Apply theme to body
+  React.useEffect(() => {
+    if (theme === 'dark') {
+      document.body.classList.add('dark');
+    } else {
+      document.body.classList.remove('dark');
+    }
+  }, [theme]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
-      <Header onExport={() => setShowExportModal(true)} />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[#16171a] dark:to-[#101215] flex flex-col transition-colors">
+      <Header 
+        onExport={() => setShowExportModal(true)}
+        theme={theme}
+        onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+      />
       <div className="flex flex-1 h-[calc(100vh-64px)]">
         <PageSidebar
           pages={pages}

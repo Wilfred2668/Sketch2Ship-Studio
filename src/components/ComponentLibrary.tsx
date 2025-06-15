@@ -13,6 +13,9 @@ export const ComponentLibrary: React.FC<ComponentLibraryProps> = ({ onAddElement
     { type: 'heading' as const, icon: Heading, label: 'Heading', color: 'from-blue-500 to-blue-600' },
     { type: 'button' as const, icon: MousePointer, label: 'Button', color: 'from-green-500 to-green-600' },
     { type: 'image' as const, icon: Image, label: 'Image', color: 'from-purple-500 to-purple-600' },
+    // New fancy components
+    { type: 'divider' as const, icon: Plus, label: 'Divider', color: 'from-gray-400 to-gray-600' },
+    { type: 'card' as const, icon: Plus, label: 'Card', color: 'from-orange-400 to-yellow-500' }
   ];
 
   return (

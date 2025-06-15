@@ -1,7 +1,7 @@
 
 export interface Element {
   id: string;
-  type: 'text' | 'heading' | 'button' | 'image';
+  type: 'text' | 'heading' | 'button' | 'image' | 'divider' | 'card';
   content: string;
   styles: {
     color?: string;

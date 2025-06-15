@@ -56,7 +56,8 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
   }, [isDragging, dragStart]);
 
   const handleDoubleClick = () => {
-    if (element.type !== 'image') {
+    // Enable inline editing for text/heading/button/card
+    if (['text', 'heading', 'button', 'card'].includes(element.type)) {
       setIsEditing(true);
     }
   };
@@ -86,13 +87,12 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
             onBlur={() => setIsEditing(false)}
             onKeyPress={(e) => e.key === 'Enter' && setIsEditing(false)}
             autoFocus
-            className="border-none outline-none bg-transparent"
+            className="border rounded px-2 py-1 w-full bg-background"
             style={element.styles}
           />
         ) : (
           <span {...commonProps}>{element.content}</span>
         );
-      
       case 'heading':
         return isEditing ? (
           <input
@@ -102,13 +102,12 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
             onBlur={() => setIsEditing(false)}
             onKeyPress={(e) => e.key === 'Enter' && setIsEditing(false)}
             autoFocus
-            className="border-none outline-none bg-transparent text-2xl font-bold"
+            className="border rounded text-2xl font-bold px-2 py-1 w-full bg-background"
             style={element.styles}
           />
         ) : (
           <h2 {...commonProps}>{element.content}</h2>
         );
-      
       case 'button':
         return isEditing ? (
           <input
@@ -118,13 +117,12 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
             onBlur={() => setIsEditing(false)}
             onKeyPress={(e) => e.key === 'Enter' && setIsEditing(false)}
             autoFocus
-            className="border-none outline-none bg-transparent"
+            className="border rounded px-2 py-1 w-full bg-background"
             style={element.styles}
           />
         ) : (
           <button {...commonProps}>{element.content}</button>
         );
-      
       case 'image':
         return (
           <div 
@@ -138,7 +136,39 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
             )}
           </div>
         );
-      
+      case 'divider':
+        // Divider: simple horizontal line, editable label above on double-click
+        return isEditing ? (
+          <input
+            type="text"
+            value={element.content}
+            onChange={(e) => handleContentChange(e.target.value)}
+            onBlur={() => setIsEditing(false)}
+            onKeyPress={(e) => e.key === 'Enter' && setIsEditing(false)}
+            autoFocus
+            className="border rounded px-2 py-1 w-full bg-background"
+          />
+        ) : (
+          <div className="w-full flex flex-col items-center py-2" {...commonProps}>
+            {element.content && <span className="text-xs text-muted-foreground mb-1">{element.content}</span>}
+            <hr className="w-32 border-t border-gray-400" />
+          </div>
+        );
+      case 'card':
+        return isEditing ? (
+          <textarea
+            value={element.content}
+            onChange={(e) => handleContentChange(e.target.value)}
+            onBlur={() => setIsEditing(false)}
+            rows={3}
+            autoFocus
+            className="border rounded p-2 w-full bg-background"
+          />
+        ) : (
+          <div {...commonProps} className="bg-white/90 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-4 min-w-[160px] min-h-[80px] shadow-sm">
+            {element.content}
+          </div>
+        );
       default:
         return <div {...commonProps}>{element.content}</div>;
     }
