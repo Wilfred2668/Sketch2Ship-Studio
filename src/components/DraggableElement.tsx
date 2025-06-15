@@ -118,8 +118,8 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
   const isResizableType = ['image', 'video', 'card', 'slideshow', 'divider', 'spacer', 'list', 'quote'].includes(element.type);
 
   // Handle resizing
-  const [resizing, setResizing] = useState<{ direction: "right" | "bottom" | null }>({ direction: null });
-  const [resizeStart, setResizeStart] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [resizing, setResizing<{ direction: "right" | "bottom" | null }>({ direction: null });
+  const [resizeStart, setResizeStart<{ x: number; y: number; width: number; height: number } | null>(null);
 
   useEffect(() => {
     if (!resizing.direction) return;
@@ -398,7 +398,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
 
       case 'accordion':
         const sections = element.content ? element.content.split('\n').filter(Boolean) : [];
-        const [openSections, setOpenSections] = useState<number[]>([]);
+        const [openSections, setOpenSections<number[]>([]);
 
         const toggleSection = (index: number) => {
           setOpenSections(prev => 
@@ -482,95 +482,149 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
     }
   };
 
-  // Helper to add resize handles to any JSX block
-  const withResizeHandles = (children: React.ReactNode) => {
-    // Only show handles if selected & resizable
-    if (!isResizableType || !isSelected) return children;
+// Replace the "withResizeHandles" helper to use better responsiveness and bigger handle areas:
+const withResizeHandles = (children: React.ReactNode) => {
+  if (!isResizableType || !isSelected) return children;
+
+  // Responsive handle size
+  const handleSize = 24;
+
+  return (
+    <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+      {children}
+      {/* Right handle */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          right: -handleSize / 2,
+          width: handleSize,
+          height: "100%",
+          cursor: "ew-resize",
+          zIndex: 2,
+          background: "transparent",
+          pointerEvents: "all",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          touchAction: "none",
+        }}
+        className="max-sm:w-8"
+        onMouseDown={(e) => {
+          e.stopPropagation();
+          setResizing({ direction: "right" });
+          setResizeStart({
+            x: e.clientX,
+            y: e.clientY,
+            width:
+              parseInt(element.styles.width as any, 10) ||
+              elementRef.current?.offsetWidth ||
+              100,
+            height:
+              parseInt(element.styles.height as any, 10) ||
+              elementRef.current?.offsetHeight ||
+              50,
+          });
+        }}
+        onTouchStart={(e) => {
+          e.stopPropagation();
+          setResizing({ direction: "right" });
+          setResizeStart({
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY,
+            width:
+              parseInt(element.styles.width as any, 10) ||
+              elementRef.current?.offsetWidth ||
+              100,
+            height:
+              parseInt(element.styles.height as any, 10) ||
+              elementRef.current?.offsetHeight ||
+              50,
+          });
+        }}
+      >
+        <div className="w-4 h-10 max-sm:h-8 rounded bg-blue-400 opacity-70 hover:opacity-100 transition" />
+      </div>
+      {/* Bottom handle */}
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          bottom: -handleSize / 2,
+          width: "100%",
+          height: handleSize,
+          cursor: "ns-resize",
+          zIndex: 2,
+          background: "transparent",
+          pointerEvents: "all",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          touchAction: "none"
+        }}
+        className="max-sm:h-8"
+        onMouseDown={(e) => {
+          e.stopPropagation();
+          setResizing({ direction: "bottom" });
+          setResizeStart({
+            x: e.clientX,
+            y: e.clientY,
+            width:
+              parseInt(element.styles.width as any, 10) ||
+              elementRef.current?.offsetWidth ||
+              100,
+            height:
+              parseInt(element.styles.height as any, 10) ||
+              elementRef.current?.offsetHeight ||
+              50,
+          });
+        }}
+        onTouchStart={(e) => {
+          e.stopPropagation();
+          setResizing({ direction: "bottom" });
+          setResizeStart({
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY,
+            width:
+              parseInt(element.styles.width as any, 10) ||
+              elementRef.current?.offsetWidth ||
+              100,
+            height:
+              parseInt(element.styles.height as any, 10) ||
+              elementRef.current?.offsetHeight ||
+              50,
+          });
+        }}
+      >
+        <div className="h-4 w-10 max-sm:w-8 rounded bg-blue-400 opacity-70 hover:opacity-100 transition" />
+      </div>
+    </div>
+  );
+};
+
+// Update wrapIfResizable for responsiveness & clamp size on mobile:
+const wrapIfResizable = (node: React.ReactNode) => {
+  if (isResizableType) {
     return (
-      <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-        {children}
-        {/* Right handle */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            right: -6,
-            width: 12,
-            height: '100%',
-            cursor: 'ew-resize',
-            zIndex: 2,
-            background: 'transparent',
-            pointerEvents: 'all',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-          onMouseDown={e => {
-            e.stopPropagation();
-            setResizing({ direction: "right" });
-            setResizeStart({
-              x: e.clientX,
-              y: e.clientY,
-              width: parseInt(element.styles.width as any, 10) || elementRef.current?.offsetWidth || 100,
-              height: parseInt(element.styles.height as any, 10) || elementRef.current?.offsetHeight || 50
-            });
-          }}
-        >
-          <div className="w-2 h-8 rounded bg-blue-400 opacity-60 hover:opacity-100 transition" />
-        </div>
-        {/* Bottom handle */}
-        <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            bottom: -6,
-            width: '100%',
-            height: 12,
-            cursor: 'ns-resize',
-            zIndex: 2,
-            background: 'transparent',
-            pointerEvents: 'all',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-          onMouseDown={e => {
-            e.stopPropagation();
-            setResizing({ direction: "bottom" });
-            setResizeStart({
-              x: e.clientX,
-              y: e.clientY,
-              width: parseInt(element.styles.width as any, 10) || elementRef.current?.offsetWidth || 100,
-              height: parseInt(element.styles.height as any, 10) || elementRef.current?.offsetHeight || 50
-            });
-          }}
-        >
-          <div className="h-2 w-8 rounded bg-blue-400 opacity-60 hover:opacity-100 transition" />
-        </div>
+      <div
+        className="relative max-w-full max-h-full w-full md:w-auto"
+        style={{
+          width: element.styles.width || "100%",
+          height: element.styles.height || "auto",
+          minWidth: "48px",
+          minHeight: "32px",
+          // clamp possible size in mobile
+          maxWidth: "100vw",
+          maxHeight: "80vh",
+        }}
+      >
+        {node}
+        {withResizeHandles(null)}
       </div>
     );
-  };
-
-  // Wrap rendered content if needed
-  const wrapIfResizable = (node: React.ReactNode) => {
-    if (isResizableType) {
-      // Use a relative container so handles are positioned right,
-      // set width/height from styles
-      return (
-        <div
-          style={{
-            width: element.styles.width || undefined,
-            height: element.styles.height || undefined,
-            position: 'relative'
-          }}
-        >
-          {node}
-          {withResizeHandles(null)}
-        </div>
-      );
-    }
-    return node;
-  };
+  }
+  return node;
+};
 
   return (
     <div
