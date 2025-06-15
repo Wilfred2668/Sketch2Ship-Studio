@@ -14,10 +14,18 @@ const renderElement = (el: Element) => {
       return <h2 key={el.id} style={style}>{el.content}</h2>;
     case 'button':
       return <button key={el.id} style={style}>{el.content}</button>;
+    case 'link':
+      return <a key={el.id} style={style} href="#" onClick={e => e.preventDefault()}>{el.content}</a>;
     case 'image':
       return (
         <img key={el.id} src={el.content} alt="Preview" style={{ ...style, width: el.styles.width, height: el.styles.height, objectFit: 'cover' }} />
       );
+    case 'video':
+      return (
+        <video key={el.id} src={el.content} controls style={{ ...style, width: el.styles.width, height: el.styles.height }} />
+      );
+    case 'icon':
+      return <span key={el.id} style={style}>{el.content}</span>;
     case 'divider':
       return (
         <div key={el.id} style={style}>
@@ -25,6 +33,8 @@ const renderElement = (el: Element) => {
           <hr style={{ width: 128, marginTop: 4 }} />
         </div>
       );
+    case 'spacer':
+      return <div key={el.id} style={style}></div>;
     case 'card':
       return (
         <div key={el.id} style={{
@@ -37,6 +47,27 @@ const renderElement = (el: Element) => {
         }}>
           {el.content}
         </div>
+      );
+    case 'list':
+      return (
+        <ul key={el.id} style={{ ...style, listStyleType: 'disc', paddingLeft: 20 }}>
+          {el.content.split('\n').filter(item => item.trim()).map((item, index) => (
+            <li key={index}>{item.trim()}</li>
+          ))}
+        </ul>
+      );
+    case 'quote':
+      return (
+        <blockquote key={el.id} style={{
+          ...style,
+          borderLeft: '4px solid #3b82f6',
+          background: '#f9fafb',
+          padding: 20,
+          fontStyle: 'italic',
+          margin: 0
+        }}>
+          "{el.content}"
+        </blockquote>
       );
     default:
       return <div key={el.id} style={style}>{el.content}</div>;

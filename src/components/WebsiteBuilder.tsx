@@ -116,9 +116,15 @@ export const WebsiteBuilder = () => {
       case 'text': return 'Your text here';
       case 'heading': return 'Your Heading';  
       case 'button': return 'Click Me';
+      case 'link': return 'Link Text';
       case 'image': return '';
+      case 'video': return '';
+      case 'icon': return '⭐';
       case 'divider': return '';
+      case 'spacer': return '';
       case 'card': return 'Card content goes here...';
+      case 'list': return 'Item 1\nItem 2\nItem 3';
+      case 'quote': return 'This is an inspiring quote that will motivate your visitors.';
       default: return '';
     }
   }
@@ -145,12 +151,24 @@ export const WebsiteBuilder = () => {
           borderRadius: '6px',
           cursor: 'pointer'
         };
+      case 'link':
+        return { ...base, color: '#007bff', textDecoration: 'underline', cursor: 'pointer' };
       case 'image':
         return { ...base, width: '200px', height: '150px' };
+      case 'video':
+        return { ...base, width: '320px', height: '180px', backgroundColor: '#000' };
+      case 'icon':
+        return { ...base, fontSize: '24px', textAlign: 'center' };
       case 'divider':
         return { ...base, backgroundColor: 'transparent', padding: '2px', border: 'none' };
+      case 'spacer':
+        return { ...base, backgroundColor: 'transparent', padding: '20px', border: 'none' };
       case 'card':
         return { ...base, backgroundColor: '#f8fafc', border: '1px solid #d1d5db', borderRadius: '10px', padding: '20px', minWidth: '160px', minHeight: '80px' };
+      case 'list':
+        return { ...base, padding: '16px' };
+      case 'quote':
+        return { ...base, fontStyle: 'italic', fontSize: '18px', padding: '20px', backgroundColor: '#f9fafb', borderLeft: '4px solid #3b82f6' };
       default:
         return base;
     }

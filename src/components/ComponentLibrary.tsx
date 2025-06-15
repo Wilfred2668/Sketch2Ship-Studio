@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Type, Heading, MousePointer, Image, Plus } from 'lucide-react';
+import { Type, Heading, MousePointer, Image, Plus, List, Link, Video, Star, Space, Quote } from 'lucide-react';
 import { Element } from '../types/builder';
 
 interface ComponentLibraryProps {
@@ -9,13 +9,25 @@ interface ComponentLibraryProps {
 
 export const ComponentLibrary: React.FC<ComponentLibraryProps> = ({ onAddElement }) => {
   const components = [
+    // Basic Components
     { type: 'text' as const, icon: Type, label: 'Text', color: 'from-gray-500 to-gray-600' },
     { type: 'heading' as const, icon: Heading, label: 'Heading', color: 'from-blue-500 to-blue-600' },
     { type: 'button' as const, icon: MousePointer, label: 'Button', color: 'from-green-500 to-green-600' },
+    { type: 'link' as const, icon: Link, label: 'Link', color: 'from-blue-400 to-blue-500' },
+    
+    // Media Components
     { type: 'image' as const, icon: Image, label: 'Image', color: 'from-purple-500 to-purple-600' },
-    // New fancy components
+    { type: 'video' as const, icon: Video, label: 'Video', color: 'from-red-500 to-red-600' },
+    { type: 'icon' as const, icon: Star, label: 'Icon', color: 'from-yellow-500 to-yellow-600' },
+    
+    // Layout Components
+    { type: 'card' as const, icon: Plus, label: 'Card', color: 'from-orange-400 to-yellow-500' },
     { type: 'divider' as const, icon: Plus, label: 'Divider', color: 'from-gray-400 to-gray-600' },
-    { type: 'card' as const, icon: Plus, label: 'Card', color: 'from-orange-400 to-yellow-500' }
+    { type: 'spacer' as const, icon: Space, label: 'Spacer', color: 'from-gray-300 to-gray-500' },
+    
+    // Content Components
+    { type: 'list' as const, icon: List, label: 'List', color: 'from-indigo-500 to-indigo-600' },
+    { type: 'quote' as const, icon: Quote, label: 'Quote', color: 'from-teal-500 to-teal-600' },
   ];
 
   return (

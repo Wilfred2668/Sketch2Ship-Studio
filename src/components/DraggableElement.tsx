@@ -126,6 +126,21 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
         ) : (
           <button {...commonProps}>{element.content}</button>
         );
+      case 'link':
+        return isEditing ? (
+          <input
+            type="text"
+            value={element.content}
+            onChange={e => onUpdate({ content: e.target.value })}
+            onBlur={() => setIsEditing(false)}
+            onKeyDown={e => e.key === 'Enter' && setIsEditing(false)}
+            autoFocus
+            className="border rounded px-2 py-1 w-full bg-background"
+            style={element.styles}
+          />
+        ) : (
+          <a {...commonProps} href="#" onClick={e => e.preventDefault()}>{element.content}</a>
+        );
       case 'image':
         return (
           <div 
@@ -139,11 +154,45 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
             )}
           </div>
         );
+      case 'video':
+        return (
+          <div 
+            {...commonProps}
+            className="bg-black border-2 border-dashed border-gray-300 flex items-center justify-center text-white"
+          >
+            {element.content ? (
+              <video src={element.content} controls className="w-full h-full" />
+            ) : (
+              <span>Video Placeholder</span>
+            )}
+          </div>
+        );
+      case 'icon':
+        return isEditing ? (
+          <input
+            type="text"
+            value={element.content}
+            onChange={e => onUpdate({ content: e.target.value })}
+            onBlur={() => setIsEditing(false)}
+            onKeyDown={e => e.key === 'Enter' && setIsEditing(false)}
+            autoFocus
+            className="border rounded px-2 py-1 w-full bg-background text-center"
+            style={element.styles}
+          />
+        ) : (
+          <span {...commonProps}>{element.content}</span>
+        );
       case 'divider':
         return (
           <div className="w-full flex flex-col items-center py-2" {...commonProps}>
             {element.content && <span className="text-xs text-muted-foreground mb-1">{element.content}</span>}
             <hr className="w-32 border-t border-gray-400" />
+          </div>
+        );
+      case 'spacer':
+        return (
+          <div {...commonProps} className="bg-transparent border border-dashed border-gray-300 flex items-center justify-center text-gray-400 min-h-[40px]">
+            {isSelected ? 'Spacer' : ''}
           </div>
         );
       case 'card':
@@ -160,6 +209,39 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
           <div {...commonProps} className="bg-white/90 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-4 min-w-[160px] min-h-[80px] shadow-sm">
             {element.content}
           </div>
+        );
+      case 'list':
+        return isEditing ? (
+          <textarea
+            value={element.content}
+            onChange={e => onUpdate({ content: e.target.value })}
+            onBlur={() => setIsEditing(false)}
+            rows={4}
+            autoFocus
+            className="border rounded p-2 w-full bg-background"
+            placeholder="Enter each item on a new line"
+          />
+        ) : (
+          <ul {...commonProps} className="list-disc list-inside space-y-1">
+            {element.content.split('\n').filter(item => item.trim()).map((item, index) => (
+              <li key={index}>{item.trim()}</li>
+            ))}
+          </ul>
+        );
+      case 'quote':
+        return isEditing ? (
+          <textarea
+            value={element.content}
+            onChange={e => onUpdate({ content: e.target.value })}
+            onBlur={() => setIsEditing(false)}
+            rows={3}
+            autoFocus
+            className="border rounded p-2 w-full bg-background"
+          />
+        ) : (
+          <blockquote {...commonProps} className="border-l-4 border-blue-500 bg-gray-50 dark:bg-gray-800 p-4 italic">
+            "{element.content}"
+          </blockquote>
         );
       default:
         return <div {...commonProps}>{element.content}</div>;
