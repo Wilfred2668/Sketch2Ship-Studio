@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Element } from '../types/builder';
 import { AccordionEditor } from './AccordionEditor';
+import { NavigationEditor } from './NavigationEditor';
+import { SlideshowEditor } from './SlideshowEditor';
 
 interface DraggableElementProps {
   element: Element;
@@ -187,6 +189,29 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
         );
       case 'slideshow':
         const images = element.content.split('\n').filter(img => img.trim());
+        
+        if (isEditing) {
+          return (
+            <div className="p-4 bg-white border border-gray-300 rounded-lg min-w-[400px]">
+              <SlideshowEditor
+                images={images}
+                onUpdate={(newImages) => {
+                  const newContent = newImages.join('\n');
+                  onUpdate({ content: newContent });
+                }}
+              />
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          );
+        }
+        
         return (
           <div {...commonProps} className="relative bg-gray-100 border border-gray-300 rounded overflow-hidden">
             {images.length > 0 ? (
@@ -237,7 +262,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
         
         if (isEditing) {
           return (
-            <div className="p-4 bg-white border border-gray-300 rounded-lg">
+            <div className="p-4 bg-white border border-gray-300 rounded-lg min-w-[350px]">
               <AccordionEditor
                 sections={sections}
                 onUpdate={(newSections) => {
@@ -284,6 +309,29 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
           const [label, url] = item.split('|');
           return { label: label?.trim() || 'Link', url: url?.trim() || '#' };
         });
+        
+        if (isEditing) {
+          return (
+            <div className="p-4 bg-white border border-gray-300 rounded-lg min-w-[400px]">
+              <NavigationEditor
+                items={navItems}
+                onUpdate={(newItems) => {
+                  const newContent = newItems.map(item => `${item.label}|${item.url}`).join('\n');
+                  onUpdate({ content: newContent });
+                }}
+              />
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          );
+        }
+        
         return (
           <nav {...commonProps} className="bg-white border-b border-gray-200 w-full">
             <div className="flex items-center justify-between px-6 py-3">
