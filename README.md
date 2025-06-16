@@ -1,4 +1,4 @@
-## SKETCH2SHIP STUDIO
+# SKETCH2SHIP STUDIO
 
 **Use your preferred IDE**
 
