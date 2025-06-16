@@ -123,6 +123,19 @@ export const WebsiteBuilder = () => {
 
   const [publicLinks, setPublicLinks] = useState<string[]>([]);
 
+  // Handle image selection from gallery
+  const handleImageSelect = (url: string) => {
+    console.log('Image selected:', url);
+    // You could implement logic here to automatically create an image element
+    // or update the currently selected element if it's an image
+  };
+
+  // Handle public link generation
+  const handlePublicLinkGenerate = (link: string) => {
+    setPublicLinks(prev => [...prev, link]);
+    console.log('Public link generated:', link);
+  };
+
   // Page operations
   const addPage = () => {
     const pageName = `Page ${pages.length + 1}`;
@@ -219,6 +232,9 @@ export const WebsiteBuilder = () => {
         return base;
     }
   }
+
+  // Get selected element safely
+  const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null;
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex flex-col transition-all duration-300 ${theme === 'dark' ? 'dark' : ''}`}>
@@ -337,10 +353,10 @@ export const WebsiteBuilder = () => {
         </main>
 
         {/* PROPERTIES PANEL */}
-        {selectedElement && (
+        {selectedElement && selectedElementData && (
           <div className="w-80 lg:w-96 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border-l border-slate-200/60 dark:border-slate-700/60 shadow-lg">
             <PropertiesPanel
-              element={elements.find(el => el.id === selectedElement)!}
+              element={selectedElementData}
               onUpdate={updates => updateElement(selectedElement, updates)}
               onClose={() => setSelectedElement(null)}
               theme={theme}
