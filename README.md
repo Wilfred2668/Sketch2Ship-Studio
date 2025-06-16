@@ -10,7 +10,7 @@ Follow these steps:
 
 ```sh
 # Step 1: Clone the repository using the project's Git URL.
-git clone [<YOUR_GIT_URL>](https://github.com/Wilfred2668/Sketch2Ship-Studio)
+git clone https://github.com/Wilfred2668/Sketch2Ship-Studio.git
 
 # Step 2: Navigate to the project directory.
 cd Sketch2Ship-Studio
