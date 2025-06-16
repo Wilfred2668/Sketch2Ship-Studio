@@ -1,21 +1,27 @@
-
 import React from 'react';
 import { Element } from '../types/builder';
-import { X, Plus, Trash2, Upload } from 'lucide-react';
+import { X, Plus, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
+import { MediaUpload } from './MediaUpload';
+import { PageSelector } from './PageSelector';
+import type { Page } from './WebsiteBuilder';
 
 interface PropertiesPanelProps {
   element: Element;
   onUpdate: (updates: Partial<Element>) => void;
   onClose: () => void;
   theme: 'light' | 'dark';
+  pages: Page[];
+  currentPageId: string;
 }
 
 export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   element,
   onUpdate,
   onClose,
-  theme
+  theme,
+  pages,
+  currentPageId
 }) => {
   // Helper functions for slideshow
   const addImage = () => {
@@ -87,6 +93,28 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   };
 
   const renderContentEditor = () => {
+    if (element.type === 'image') {
+      return (
+        <MediaUpload
+          type="image"
+          value={element.content}
+          onChange={(url) => onUpdate({ content: url })}
+          placeholder="Enter image URL or upload"
+        />
+      );
+    }
+
+    if (element.type === 'video') {
+      return (
+        <MediaUpload
+          type="video"
+          value={element.content}
+          onChange={(url) => onUpdate({ content: url })}
+          placeholder="Enter video URL, YouTube link, or upload"
+        />
+      );
+    }
+
     if (element.type === 'slideshow') {
       const images = element.content ? element.content.split('\n').filter(Boolean) : [];
       
@@ -114,22 +142,12 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 </Button>
               </div>
               
-              <div className="space-y-2">
-                <input
-                  type="text"
-                  value={image}
-                  onChange={(e) => updateImage(index, e.target.value)}
-                  placeholder="Image URL"
-                  className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-background"
-                />
-                <div className="w-full h-16 bg-gray-100 dark:bg-gray-800 border border-dashed border-gray-300 dark:border-gray-600 rounded flex items-center justify-center overflow-hidden">
-                  {image ? (
-                    <img src={image} alt={`Slide ${index + 1}`} className="h-full object-cover" />
-                  ) : (
-                    <Upload className="w-4 h-4 text-gray-400" />
-                  )}
-                </div>
-              </div>
+              <MediaUpload
+                type="image"
+                value={image}
+                onChange={(url) => updateImage(index, url)}
+                placeholder="Image URL"
+              />
             </div>
           ))}
         </div>
@@ -224,12 +242,11 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-background"
                 />
                 
-                <input
-                  type="text"
-                  value={url || ''}
-                  onChange={(e) => updateNavItem(index, 'url', e.target.value)}
-                  placeholder="URL (e.g., #home, /about)"
-                  className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-background"
+                <PageSelector
+                  pages={pages}
+                  currentPageId={currentPageId}
+                  selectedValue={url ? { type: url.startsWith('#') || url.startsWith('/') || url.includes('://') ? 'url' : 'page', value: url } : undefined}
+                  onSelect={(linkTo) => updateNavItem(index, 'url', linkTo.value)}
                 />
               </div>
             );
@@ -248,13 +265,6 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             value={element.content}
             onChange={e => onUpdate({ content: e.target.value })}
             rows={4}
-          />
-        ) : element.type === 'image' ? (
-          <input
-            className="border rounded w-full p-2 bg-background"
-            value={element.content}
-            onChange={e => onUpdate({ content: e.target.value })}
-            placeholder="Image URL or path"
           />
         ) : (
           <input
@@ -519,6 +529,19 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           <h4 className="font-medium text-sm text-gray-900 dark:text-white mb-3">Content</h4>
           {renderContentEditor()}
         </div>
+
+        {/* Link Settings for buttons and links */}
+        {(['button', 'link'].includes(element.type)) && (
+          <div>
+            <h4 className="font-medium text-sm text-gray-900 dark:text-white mb-3">Link Settings</h4>
+            <PageSelector
+              pages={pages}
+              currentPageId={currentPageId}
+              selectedValue={element.linkTo}
+              onSelect={(linkTo) => onUpdate({ linkTo })}
+            />
+          </div>
+        )}
         
         {/* Style Controls */}
         <div>

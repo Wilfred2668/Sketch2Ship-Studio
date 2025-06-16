@@ -299,6 +299,8 @@ export const WebsiteBuilder = () => {
             onUpdate={updates => updateElement(selectedElement, updates)}
             onClose={() => setSelectedElement(null)}
             theme={theme}
+            pages={pages}
+            currentPageId={currentPageId}
           />
         )}
       </div>

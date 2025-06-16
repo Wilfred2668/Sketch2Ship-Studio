@@ -23,4 +23,8 @@ export interface Element {
     x: number;
     y: number;
   };
+  linkTo?: {
+    type: 'page' | 'url';
+    value: string;
+  };
 }
