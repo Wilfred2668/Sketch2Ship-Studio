@@ -56,7 +56,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ pages, onClose }) => {
       }
 
       .nav-button {
-        background: #3b82f6;
+        background: #ea580c;
         color: white;
         border: none;
         padding: 8px 16px;
@@ -66,11 +66,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({ pages, onClose }) => {
       }
 
       .nav-button:hover {
-        background: #2563eb;
+        background: #dc2626;
       }
 
       .nav-button.active {
-        background: #1d4ed8;
+        background: #b91c1c;
       }
 
       /* Responsive Slideshow */
@@ -197,6 +197,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ pages, onClose }) => {
       }
     };
 
+    // Generate HTML for all pages
     const pagesHTML = pages.map((page, index) => {
       const elementsHTML = page.elements.map(generateElementHTML).join('\n');
       return `  <div class="page ${index === 0 ? 'active' : ''}" id="${page.id}">
@@ -254,6 +255,7 @@ ${script}
   };
 
   const generateReact = () => {
+    // Generate components for all pages
     const pagesJSX = pages.map((page, index) => {
       const elementsJSX = page.elements.map(element => {
         const styleObj = Object.entries(element.styles)
@@ -304,7 +306,7 @@ const MyWebsite = () => {
           style={{
             padding: '8px 16px',
             marginRight: '8px',
-            background: currentPage === '${page.name.replace(/\s+/g, '')}' ? '#1d4ed8' : '#3b82f6',
+            background: currentPage === '${page.name.replace(/\s+/g, '')}' ? '#b91c1c' : '#ea580c',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
@@ -327,14 +329,14 @@ export default MyWebsite;`;
   <div>
     ${pages.length > 1 ? `<nav style="padding: 1rem; border-bottom: 1px solid #e2e8f0;">
       ${pages.map(page => `<button @click="currentPage = '${page.name.replace(/\s+/g, '')}'" 
-              :style="{ padding: '8px 16px', marginRight: '8px', background: currentPage === '${page.name.replace(/\s+/g, '')}' ? '#1d4ed8' : '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }">
+              :style="{ padding: '8px 16px', marginRight: '8px', background: currentPage === '${page.name.replace(/\s+/g, '')}' ? '#b91c1c' : '#ea580c', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }">
         ${page.name}
       </button>`).join('\n      ')}
     </nav>` : ''}
     
     ${pages.map(page => `<div v-if="currentPage === '${page.name.replace(/\s+/g, '')}'" style="position: relative; min-height: 100vh; font-family: Arial, sans-serif;">
-      <!-- ${page.name} page elements would go here -->
-      <div>Multi-page Vue component</div>
+      <!-- ${page.name} page with ${page.elements.length} elements -->
+      <div>Page: ${page.name}</div>
     </div>`).join('\n    ')}
   </div>
 </template>
@@ -362,7 +364,7 @@ export default function Home() {
     <>
       <Head>
         <title>My Website</title>
-        <meta name="description" content="Generated with website builder" />
+        <meta name="description" content="Generated with Sketch2Ship Studio" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
@@ -373,7 +375,7 @@ export default function Home() {
             style={{
               padding: '8px 16px',
               marginRight: '8px',
-              background: currentPage === '${page.name.replace(/\s+/g, '')}' ? '#1d4ed8' : '#3b82f6',
+              background: currentPage === '${page.name.replace(/\s+/g, '')}' ? '#b91c1c' : '#ea580c',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
@@ -385,7 +387,7 @@ export default function Home() {
         </nav>` : ''}
         
         <div style={{ position: 'relative', minHeight: '100vh', fontFamily: 'Arial, sans-serif' }}>
-          {/* Multi-page Next.js application */}
+          {/* Website with ${pages.length} pages exported from Sketch2Ship Studio */}
           <h1>Website with {${pages.length}} pages</h1>
         </div>
       </div>
@@ -495,7 +497,7 @@ export default function Home() {
                 onClick={() => setSelectedFormat(format.id as ExportFormat)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   selectedFormat === format.id
-                    ? 'bg-blue-500 text-white shadow-md'
+                    ? 'bg-orange-500 text-white shadow-md'
                     : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600'
                 }`}
               >
@@ -533,7 +535,7 @@ export default function Home() {
             </Button>
             <Button
               onClick={handleDownload}
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700"
             >
               <Download className="w-4 h-4" />
               Download {selectedFormat.toUpperCase()}
