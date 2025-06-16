@@ -8,17 +8,24 @@ The only requirement is having Node.js & npm installed - [install with nvm](http
 
 Follow these steps:
 
+
+### Step 1: Clone the repository using the project's Git URL.
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
 git clone https://github.com/Wilfred2668/Sketch2Ship-Studio.git
+```
 
-# Step 2: Navigate to the project directory.
+### Step 2: Navigate to the project directory.
+```sh
 cd Sketch2Ship-Studio
+```
 
-# Step 3: Install the necessary dependencies.
+### Step 3: Install the necessary dependencies.
+```sh
 npm i
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### Step 4: Start the development server with auto-reloading and an instant preview.
+```sh
 npm run dev
 ```
 
