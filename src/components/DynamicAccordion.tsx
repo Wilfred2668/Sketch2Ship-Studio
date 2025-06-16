@@ -70,8 +70,25 @@ export const DynamicAccordion: React.FC<DynamicAccordionProps> = ({
     );
   };
 
+  // Apply user styles to the accordion container
+  const containerStyle = {
+    backgroundColor: style?.backgroundColor || '#ffffff',
+    border: style?.border || '1px solid #e5e7eb',
+    borderRadius: style?.borderRadius || '8px',
+    fontFamily: style?.fontFamily || 'inherit',
+    fontSize: style?.fontSize || '14px',
+    fontWeight: style?.fontWeight || '400',
+    color: style?.color || '#374151',
+    padding: style?.padding || '0px',
+    margin: style?.margin || '0px',
+    width: style?.width || 'auto',
+    height: style?.height || 'auto',
+    textAlign: style?.textAlign || 'left',
+    ...style
+  };
+
   return (
-    <div style={style} className={`bg-white border border-gray-200 rounded-lg overflow-hidden ${className}`}>
+    <div style={containerStyle} className={`overflow-hidden ${className}`}>
       {sections.map((section, index) => (
         <div key={section.id} className="border-b border-gray-200 last:border-b-0">
           {editingId === section.id ? (
@@ -97,7 +114,11 @@ export const DynamicAccordion: React.FC<DynamicAccordionProps> = ({
             <>
               <div className="group relative">
                 <button
-                  className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 font-medium text-sm flex justify-between items-center"
+                  style={{
+                    textDecoration: style?.textDecoration || 'none',
+                    cursor: style?.cursor || 'pointer'
+                  }}
+                  className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 flex justify-between items-center"
                   onClick={() => toggleSection(section.id)}
                 >
                   <span>{section.title}</span>

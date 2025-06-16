@@ -65,8 +65,24 @@ export const DynamicNavigation: React.FC<DynamicNavigationProps> = ({
     );
   };
 
+  // Apply user styles to the navigation container
+  const containerStyle = {
+    backgroundColor: style?.backgroundColor || '#ffffff',
+    border: style?.border || '1px solid #e5e7eb',
+    borderRadius: style?.borderRadius || '0px',
+    fontFamily: style?.fontFamily || 'inherit',
+    fontSize: style?.fontSize || '14px',
+    fontWeight: style?.fontWeight || '500',
+    color: style?.color || '#374151',
+    padding: style?.padding || '0px',
+    margin: style?.margin || '0px',
+    width: style?.width || 'auto',
+    height: style?.height || 'auto',
+    ...style
+  };
+
   return (
-    <div style={style} className={`bg-white border border-gray-200 ${className}`}>
+    <div style={containerStyle} className={`${className}`}>
       <div className="flex items-center">
         {items.map((item) => (
           <div key={item.id} className="relative group">
@@ -93,8 +109,13 @@ export const DynamicNavigation: React.FC<DynamicNavigationProps> = ({
               </div>
             ) : (
               <div
-                className={`flex items-center px-4 py-3 text-sm font-medium cursor-pointer border-r border-gray-200 last:border-r-0 transition-colors ${
-                  item.isActive ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
+                style={{
+                  textAlign: style?.textAlign || 'left',
+                  textDecoration: style?.textDecoration || 'none',
+                  cursor: style?.cursor || 'pointer'
+                }}
+                className={`flex items-center px-4 py-3 cursor-pointer border-r border-gray-200 last:border-r-0 transition-colors ${
+                  item.isActive ? 'opacity-80' : 'hover:opacity-70'
                 }`}
                 onClick={() => setActiveTab(item.id)}
               >
