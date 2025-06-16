@@ -39,6 +39,8 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
     if (isEditing) return;
     
     e.preventDefault();
+    e.stopPropagation();
+    
     const rect = elementRef.current?.getBoundingClientRect();
     if (rect) {
       setDragOffset({
@@ -85,24 +87,26 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging) return;
       
-      const canvas = document.querySelector('.canvas-area');
-      if (!canvas) return;
+      // Find the canvas container - look for the fixed-size canvas
+      const canvasContainer = document.querySelector('.canvas-area > div');
+      if (!canvasContainer) return;
       
-      const canvasRect = canvas.getBoundingClientRect();
-      const canvasContent = canvas.querySelector('div[style*="width: 1200"]');
-      if (!canvasContent) return;
+      const canvasRect = canvasContainer.getBoundingClientRect();
       
-      const contentRect = canvasContent.getBoundingClientRect();
+      // Calculate new position relative to the canvas
+      const newX = e.clientX - canvasRect.left - dragOffset.x;
+      const newY = e.clientY - canvasRect.top - dragOffset.y;
       
-      const newX = e.clientX - contentRect.left - dragOffset.x;
-      const newY = e.clientY - contentRect.top - dragOffset.y;
+      // Constrain to canvas boundaries (800x600)
+      const constrainedX = Math.max(0, Math.min(newX, 800 - 100)); // Leave some margin
+      const constrainedY = Math.max(0, Math.min(newY, 600 - 50));  // Leave some margin
       
-      const newPosition = {
-        x: Math.max(0, Math.min(newX, 1200 - 100)),
-        y: Math.max(0, Math.min(newY, 800 - 50))
-      };
-      
-      onUpdate({ position: newPosition });
+      onUpdate({ 
+        position: { 
+          x: constrainedX, 
+          y: constrainedY 
+        } 
+      });
     };
 
     const handleMouseUp = () => {
