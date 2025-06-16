@@ -12,9 +12,10 @@ import { ImageGallery } from './ImageGallery';
 import { PublicLinkGenerator } from './PublicLinkGenerator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Button } from './ui/button';
-import { ArrowLeft, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Menu, X, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../hooks/use-toast';
 
 export interface Page {
   id: string;
@@ -27,6 +28,7 @@ const DEFAULT_PAGE_NAME = "Home";
 export const WebsiteBuilder = () => {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const { toast } = useToast();
   
   // Sidebar collapse states
   const [isPageSidebarCollapsed, setIsPageSidebarCollapsed] = useState(false);
@@ -40,6 +42,8 @@ export const WebsiteBuilder = () => {
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [projectName, setProjectName] = useState('My Website Project');
+  const [isSaving, setIsSaving] = useState(false);
 
   const { snapshots, saveSnapshot, undo, redo, canUndo, canRedo } = useUndoRedo(
     pages, setPages
@@ -48,6 +52,46 @@ export const WebsiteBuilder = () => {
   // Get the currently active page and its elements
   const currentPageIndex = pages.findIndex(p => p.id === currentPageId);
   const elements = currentPageIndex !== -1 ? pages[currentPageIndex].elements : [];
+
+  // Save project functionality
+  const saveProject = async () => {
+    setIsSaving(true);
+    try {
+      const projectData = {
+        id: `project-${Date.now()}`,
+        name: projectName,
+        pages,
+        currentPageId,
+        createdAt: new Date().toISOString(),
+        lastModified: new Date().toISOString()
+      };
+
+      // Save to localStorage
+      const savedProjects = JSON.parse(localStorage.getItem('websiteBuilderProjects') || '[]');
+      const existingProjectIndex = savedProjects.findIndex((p: any) => p.name === projectName);
+      
+      if (existingProjectIndex !== -1) {
+        savedProjects[existingProjectIndex] = { ...projectData, createdAt: savedProjects[existingProjectIndex].createdAt };
+      } else {
+        savedProjects.push(projectData);
+      }
+      
+      localStorage.setItem('websiteBuilderProjects', JSON.stringify(savedProjects));
+      
+      toast({
+        title: "Project Saved",
+        description: `"${projectName}" has been saved successfully.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Save Failed",
+        description: "Failed to save the project. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Utilities to update elements on the current page only
   const setElementsForPage = useCallback((newElements: Element[]) => {
@@ -136,7 +180,6 @@ export const WebsiteBuilder = () => {
     console.log('Public link generated:', link);
   };
 
-  // Page operations
   const addPage = () => {
     const pageName = `Page ${pages.length + 1}`;
     const newPage: Page = {
@@ -246,15 +289,28 @@ export const WebsiteBuilder = () => {
       />
       
       <div className="flex items-center justify-between px-4 py-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-b border-slate-200/60 dark:border-slate-700/60">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Dashboard
-        </Button>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Dashboard
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={saveProject}
+            disabled={isSaving}
+            className="flex items-center gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-600 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
+          >
+            <Save className="w-4 h-4" />
+            {isSaving ? 'Saving...' : 'Save Project'}
+          </Button>
+        </div>
         
         <div className="text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full">
           <span className="hidden sm:inline">Current page: </span>
