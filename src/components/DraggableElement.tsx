@@ -418,7 +418,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
                 const newContent = newSections.map(s => `${s.title}|${s.content}`).join('\n');
                 onUpdate({ content: newContent });
               }}
-              style={{ position: 'relative', cursor: 'default' }}
+              styles={element.styles}
               className="min-w-[300px]"
             />
           </div>
@@ -443,7 +443,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
                 const newContent = newItems.map(item => `${item.label}|${item.url}`).join('\n');
                 onUpdate({ content: newContent });
               }}
-              style={{ position: 'relative', cursor: 'default' }}
+              styles={element.styles}
               className="min-w-[400px]"
             />
           </div>

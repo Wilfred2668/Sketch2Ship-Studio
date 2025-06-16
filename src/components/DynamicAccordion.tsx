@@ -13,14 +13,14 @@ interface AccordionSection {
 interface DynamicAccordionProps {
   sections: AccordionSection[];
   onUpdate: (sections: AccordionSection[]) => void;
-  style?: React.CSSProperties;
+  styles?: React.CSSProperties;
   className?: string;
 }
 
 export const DynamicAccordion: React.FC<DynamicAccordionProps> = ({
   sections,
   onUpdate,
-  style,
+  styles = {},
   className = ""
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -70,21 +70,22 @@ export const DynamicAccordion: React.FC<DynamicAccordionProps> = ({
     );
   };
 
-  // Apply user styles to the accordion container
-  const containerStyle = {
-    backgroundColor: style?.backgroundColor || '#ffffff',
-    border: style?.border || '1px solid #e5e7eb',
-    borderRadius: style?.borderRadius || '8px',
-    fontFamily: style?.fontFamily || 'inherit',
-    fontSize: style?.fontSize || '14px',
-    fontWeight: style?.fontWeight || '400',
-    color: style?.color || '#374151',
-    padding: style?.padding || '0px',
-    margin: style?.margin || '0px',
-    width: style?.width || 'auto',
-    height: style?.height || 'auto',
-    textAlign: style?.textAlign || 'left',
-    ...style
+  // Apply user styles with proper defaults
+  const containerStyle: React.CSSProperties = {
+    backgroundColor: styles.backgroundColor || '#ffffff',
+    border: styles.border || '1px solid #e5e7eb',
+    borderRadius: styles.borderRadius || '8px',
+    fontFamily: styles.fontFamily || 'inherit',
+    fontSize: styles.fontSize || '14px',
+    fontWeight: styles.fontWeight || '400',
+    color: styles.color || '#374151',
+    padding: styles.padding || '0px',
+    margin: styles.margin || '0px',
+    width: styles.width || 'auto',
+    height: styles.height || 'auto',
+    textAlign: styles.textAlign || 'left',
+    position: 'relative',
+    ...styles
   };
 
   return (
@@ -115,8 +116,13 @@ export const DynamicAccordion: React.FC<DynamicAccordionProps> = ({
               <div className="group relative">
                 <button
                   style={{
-                    textDecoration: style?.textDecoration || 'none',
-                    cursor: style?.cursor || 'pointer'
+                    textDecoration: styles.textDecoration || 'none',
+                    cursor: styles.cursor || 'pointer',
+                    fontFamily: styles.fontFamily || 'inherit',
+                    fontSize: styles.fontSize || '14px',
+                    fontWeight: styles.fontWeight || '400',
+                    color: styles.color || '#374151',
+                    textAlign: styles.textAlign || 'left'
                   }}
                   className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 flex justify-between items-center"
                   onClick={() => toggleSection(section.id)}
@@ -152,7 +158,14 @@ export const DynamicAccordion: React.FC<DynamicAccordionProps> = ({
                 </button>
               </div>
               {section.isOpen && (
-                <div className="px-4 py-3 text-sm text-gray-700 bg-white">
+                <div 
+                  className="px-4 py-3 text-sm bg-white"
+                  style={{
+                    fontFamily: styles.fontFamily || 'inherit',
+                    fontSize: styles.fontSize || '14px',
+                    color: styles.color || '#374151'
+                  }}
+                >
                   {section.content}
                 </div>
               )}

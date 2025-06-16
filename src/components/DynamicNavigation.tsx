@@ -13,14 +13,14 @@ interface NavItem {
 interface DynamicNavigationProps {
   items: NavItem[];
   onUpdate: (items: NavItem[]) => void;
-  style?: React.CSSProperties;
+  styles?: React.CSSProperties;
   className?: string;
 }
 
 export const DynamicNavigation: React.FC<DynamicNavigationProps> = ({
   items,
   onUpdate,
-  style,
+  styles = {},
   className = ""
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -65,24 +65,26 @@ export const DynamicNavigation: React.FC<DynamicNavigationProps> = ({
     );
   };
 
-  // Apply user styles to the navigation container
-  const containerStyle = {
-    backgroundColor: style?.backgroundColor || '#ffffff',
-    border: style?.border || '1px solid #e5e7eb',
-    borderRadius: style?.borderRadius || '0px',
-    fontFamily: style?.fontFamily || 'inherit',
-    fontSize: style?.fontSize || '14px',
-    fontWeight: style?.fontWeight || '500',
-    color: style?.color || '#374151',
-    padding: style?.padding || '0px',
-    margin: style?.margin || '0px',
-    width: style?.width || 'auto',
-    height: style?.height || 'auto',
-    ...style
+  // Apply user styles with proper defaults
+  const containerStyle: React.CSSProperties = {
+    backgroundColor: styles.backgroundColor || '#ffffff',
+    border: styles.border || '1px solid #e5e7eb',
+    borderRadius: styles.borderRadius || '0px',
+    fontFamily: styles.fontFamily || 'inherit',
+    fontSize: styles.fontSize || '14px',
+    fontWeight: styles.fontWeight || '500',
+    color: styles.color || '#374151',
+    padding: styles.padding || '0px',
+    margin: styles.margin || '0px',
+    width: styles.width || 'auto',
+    height: styles.height || 'auto',
+    textAlign: styles.textAlign || 'left',
+    position: 'relative',
+    ...styles
   };
 
   return (
-    <div style={containerStyle} className={`${className}`}>
+    <div style={containerStyle} className={className}>
       <div className="flex items-center">
         {items.map((item) => (
           <div key={item.id} className="relative group">
@@ -110,12 +112,16 @@ export const DynamicNavigation: React.FC<DynamicNavigationProps> = ({
             ) : (
               <div
                 style={{
-                  textAlign: style?.textAlign || 'left',
-                  textDecoration: style?.textDecoration || 'none',
-                  cursor: style?.cursor || 'pointer'
+                  textAlign: styles.textAlign || 'left',
+                  textDecoration: styles.textDecoration || 'none',
+                  cursor: styles.cursor || 'pointer',
+                  fontFamily: styles.fontFamily || 'inherit',
+                  fontSize: styles.fontSize || '14px',
+                  fontWeight: styles.fontWeight || '500',
+                  color: styles.color || '#374151'
                 }}
                 className={`flex items-center px-4 py-3 cursor-pointer border-r border-gray-200 last:border-r-0 transition-colors ${
-                  item.isActive ? 'opacity-80' : 'hover:opacity-70'
+                  item.isActive ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'
                 }`}
                 onClick={() => setActiveTab(item.id)}
               >
