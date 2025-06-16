@@ -10,6 +10,7 @@ interface DraggableElementProps {
   onUpdate: (updates: Partial<Element>) => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  onNavigation?: (linkTo?: { type: 'page' | 'url'; value: string }) => void;
 }
 
 export const DraggableElement: React.FC<DraggableElementProps> = ({
@@ -18,7 +19,8 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
   onSelect,
   onUpdate,
   onDelete,
-  onDuplicate
+  onDuplicate,
+  onNavigation
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -34,9 +36,9 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
   }, [isEditing]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    console.log('Mouse down on element:', element.type, element.id);
     if (isEditing) return;
     
+    e.preventDefault();
     const rect = elementRef.current?.getBoundingClientRect();
     if (rect) {
       setDragOffset({
@@ -46,23 +48,31 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
     }
     setIsDragging(true);
     onSelect();
-    console.log('Started dragging element:', element.id);
   };
 
   const handleDoubleClick = () => {
-    // Only enable editing for simple text elements
     if (['text', 'heading', 'button', 'card'].includes(element.type)) {
       setIsEditing(true);
     }
   };
 
-  // Finish editing on blur or Enter
+  // Handle element click for navigation
+  const handleElementClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    // Only trigger navigation if not in editing mode and element has linkTo
+    if (!isEditing && element.linkTo && onNavigation) {
+      if (element.type === 'button' || element.type === 'link') {
+        onNavigation(element.linkTo);
+      }
+    }
+  };
+
   const handleContentChange = (newContent: string) => {
     onUpdate({ content: newContent });
     setIsEditing(false);
   };
 
-  // Helper function to convert YouTube URL to embed URL
   const getYouTubeEmbedUrl = (url: string) => {
     const videoIdMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
     if (videoIdMatch) {
@@ -75,37 +85,31 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging) return;
       
-      console.log('Mouse moving while dragging');
       const canvas = document.querySelector('.canvas-area');
-      if (!canvas) {
-        console.log('Canvas not found!');
-        return;
-      }
+      if (!canvas) return;
       
       const canvasRect = canvas.getBoundingClientRect();
-      const newX = e.clientX - canvasRect.left - dragOffset.x;
-      const newY = e.clientY - canvasRect.top - dragOffset.y;
+      const canvasContent = canvas.querySelector('div[style*="width: 1200"]');
+      if (!canvasContent) return;
+      
+      const contentRect = canvasContent.getBoundingClientRect();
+      
+      const newX = e.clientX - contentRect.left - dragOffset.x;
+      const newY = e.clientY - contentRect.top - dragOffset.y;
       
       const newPosition = {
-        x: Math.max(0, newX),
-        y: Math.max(0, newY)
+        x: Math.max(0, Math.min(newX, 1200 - 100)),
+        y: Math.max(0, Math.min(newY, 800 - 50))
       };
       
-      console.log('Updating position to:', newPosition);
-      onUpdate({
-        position: newPosition
-      });
+      onUpdate({ position: newPosition });
     };
 
     const handleMouseUp = () => {
-      if (isDragging) {
-        console.log('Stopped dragging element:', element.id);
-      }
       setIsDragging(false);
     };
 
     if (isDragging) {
-      console.log('Adding mouse event listeners');
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     }
@@ -114,12 +118,10 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragOffset, onUpdate, element.id]);
+  }, [isDragging, dragOffset, onUpdate]);
 
-  // Helper to check if element is resizable
   const isResizableType = ['image', 'video', 'card', 'slideshow', 'divider', 'spacer', 'list', 'quote'].includes(element.type);
 
-  // Handle resizing
   const [resizing, setResizing] = useState<{ direction: "right" | "bottom" | null }>({ direction: null });
   const [resizeStart, setResizeStart] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
 
@@ -129,15 +131,16 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
     const handleMouseMove = (e: MouseEvent) => {
       if (!elementRef.current || !resizeStart) return;
 
-      let newWidth = parseInt(resizeStart.width as any, 10) || elementRef.current.offsetWidth;
-      let newHeight = parseInt(resizeStart.height as any, 10) || elementRef.current.offsetHeight;
+      let newWidth = resizeStart.width;
+      let newHeight = resizeStart.height;
+      
       if (resizing.direction === "right") {
-        newWidth = Math.max(30, resizeStart.width + (e.clientX - resizeStart.x));
+        newWidth = Math.max(50, resizeStart.width + (e.clientX - resizeStart.x));
       }
       if (resizing.direction === "bottom") {
         newHeight = Math.max(30, resizeStart.height + (e.clientY - resizeStart.y));
       }
-      // Update instantly for feel, but throttle updates if needed
+      
       onUpdate({
         styles: {
           ...element.styles,
@@ -160,7 +163,6 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
     };
   }, [resizing, resizeStart, onUpdate, element.styles]);
 
-  // Render function for types
   const renderElement = () => {
     const commonProps = {
       style: {
@@ -168,11 +170,13 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
         left: element.position.x,
         top: element.position.y,
         position: 'absolute' as const,
-        cursor: isDragging ? 'grabbing' : 'grab',
+        cursor: isDragging ? 'grabbing' : (element.linkTo ? 'pointer' : 'grab'),
         border: isSelected ? '2px solid #3b82f6' : '1px solid transparent',
         minWidth: '50px',
-        minHeight: '30px'
-      }
+        minHeight: '30px',
+        userSelect: 'none' as const
+      },
+      onClick: handleElementClick
     };
 
     switch (element.type) {
@@ -214,7 +218,13 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
 
       case 'button':
         return (
-          <button {...commonProps} style={{ ...commonProps.style, cursor: 'pointer' }}>
+          <button 
+            {...commonProps} 
+            style={{ 
+              ...commonProps.style, 
+              cursor: element.linkTo ? 'pointer' : (isDragging ? 'grabbing' : 'grab')
+            }}
+          >
             {isEditing ? (
               <input
                 ref={inputRef}
@@ -232,7 +242,14 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
 
       case 'link':
         return (
-          <a {...commonProps} href="#" style={{ ...commonProps.style, cursor: 'pointer' }}>
+          <a 
+            {...commonProps} 
+            href="#" 
+            style={{ 
+              ...commonProps.style, 
+              cursor: element.linkTo ? 'pointer' : (isDragging ? 'grabbing' : 'grab')
+            }}
+          >
             {element.content}
           </a>
         );
@@ -458,12 +475,10 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
     }
   };
 
-  // Replace the "withResizeHandles" helper to use better responsiveness and bigger handle areas:
   const withResizeHandles = (children: React.ReactNode) => {
     if (!isResizableType || !isSelected) return children;
 
-    // Responsive handle size
-    const handleSize = 24;
+    const handleSize = 20;
 
     return (
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
@@ -483,43 +498,19 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            touchAction: "none",
           }}
-          className="max-sm:w-8"
           onMouseDown={(e) => {
             e.stopPropagation();
             setResizing({ direction: "right" });
             setResizeStart({
               x: e.clientX,
               y: e.clientY,
-              width:
-                parseInt(element.styles.width as any, 10) ||
-                elementRef.current?.offsetWidth ||
-                100,
-              height:
-                parseInt(element.styles.height as any, 10) ||
-                elementRef.current?.offsetHeight ||
-                50,
-            });
-          }}
-          onTouchStart={(e) => {
-            e.stopPropagation();
-            setResizing({ direction: "right" });
-            setResizeStart({
-              x: e.touches[0].clientX,
-              y: e.touches[0].clientY,
-              width:
-                parseInt(element.styles.width as any, 10) ||
-                elementRef.current?.offsetWidth ||
-                100,
-              height:
-                parseInt(element.styles.height as any, 10) ||
-                elementRef.current?.offsetHeight ||
-                50,
+              width: parseInt(element.styles.width as any, 10) || elementRef.current?.offsetWidth || 100,
+              height: parseInt(element.styles.height as any, 10) || elementRef.current?.offsetHeight || 50,
             });
           }}
         >
-          <div className="w-4 h-10 max-sm:h-8 rounded bg-blue-400 opacity-70 hover:opacity-100 transition" />
+          <div className="w-3 h-8 rounded bg-blue-400 opacity-70 hover:opacity-100 transition" />
         </div>
         {/* Bottom handle */}
         <div
@@ -536,62 +527,34 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            touchAction: "none"
           }}
-          className="max-sm:h-8"
           onMouseDown={(e) => {
             e.stopPropagation();
             setResizing({ direction: "bottom" });
             setResizeStart({
               x: e.clientX,
               y: e.clientY,
-              width:
-                parseInt(element.styles.width as any, 10) ||
-                elementRef.current?.offsetWidth ||
-                100,
-              height:
-                parseInt(element.styles.height as any, 10) ||
-                elementRef.current?.offsetHeight ||
-                50,
-            });
-          }}
-          onTouchStart={(e) => {
-            e.stopPropagation();
-            setResizing({ direction: "bottom" });
-            setResizeStart({
-              x: e.touches[0].clientX,
-              y: e.touches[0].clientY,
-              width:
-                parseInt(element.styles.width as any, 10) ||
-                elementRef.current?.offsetWidth ||
-                100,
-              height:
-                parseInt(element.styles.height as any, 10) ||
-                elementRef.current?.offsetHeight ||
-                50,
+              width: parseInt(element.styles.width as any, 10) || elementRef.current?.offsetWidth || 100,
+              height: parseInt(element.styles.height as any, 10) || elementRef.current?.offsetHeight || 50,
             });
           }}
         >
-          <div className="h-4 w-10 max-sm:w-8 rounded bg-blue-400 opacity-70 hover:opacity-100 transition" />
+          <div className="h-3 w-8 rounded bg-blue-400 opacity-70 hover:opacity-100 transition" />
         </div>
       </div>
     );
   };
 
-  // Update wrapIfResizable for responsiveness & clamp size on mobile:
   const wrapIfResizable = (node: React.ReactNode) => {
     if (isResizableType) {
       return (
         <div
-          className="relative max-w-full max-h-full w-full md:w-auto"
+          className="relative w-full"
           style={{
-            width: element.styles.width || "100%",
-            height: element.styles.height || "auto",
-            minWidth: "48px",
-            minHeight: "32px",
-            // clamp possible size in mobile
-            maxWidth: "100vw",
-            maxHeight: "80vh",
+            width: element.styles.width || "200px",
+            height: element.styles.height || "150px",
+            minWidth: "50px",
+            minHeight: "30px",
           }}
         >
           {node}
@@ -608,6 +571,7 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
       onMouseDown={handleMouseDown}
       onDoubleClick={handleDoubleClick}
       className={`element ${isSelected ? 'selected' : ''}`}
+      style={{ zIndex: isSelected ? 10 : 1 }}
     >
       {wrapIfResizable(renderElement())}
 

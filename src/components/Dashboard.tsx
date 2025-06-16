@@ -1,115 +1,182 @@
 
-import React from 'react';
-import { UserButton } from '@clerk/clerk-react';
-import { Button } from './ui/button';
-import { Plus, History, Palette } from 'lucide-react';
+import React, { useState } from 'react';
+import { UserButton, useUser } from '@clerk/clerk-react';
+import { Plus, FolderOpen, Settings, Palette } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Button } from './ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from './ui/dialog';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+
+interface Project {
+  id: string;
+  name: string;
+  createdAt: string;
+  lastModified: string;
+}
 
 export const Dashboard = () => {
+  const { user } = useUser();
   const navigate = useNavigate();
+  const [projects, setProjects] = useState<Project[]>([
+    {
+      id: '1',
+      name: 'Sample Website',
+      createdAt: '2024-01-15',
+      lastModified: '2024-01-20'
+    }
+  ]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [projectName, setProjectName] = useState('');
 
-  const handleCreateWebsite = () => {
-    navigate('/builder');
+  const handleCreateProject = () => {
+    if (projectName.trim()) {
+      const newProject: Project = {
+        id: Date.now().toString(),
+        name: projectName.trim(),
+        createdAt: new Date().toISOString().split('T')[0],
+        lastModified: new Date().toISOString().split('T')[0]
+      };
+      setProjects(prev => [newProject, ...prev]);
+      setProjectName('');
+      setIsDialogOpen(false);
+      // Navigate to builder with the new project
+      navigate('/builder');
+    }
   };
 
-  const handleViewPreviousWebsites = () => {
-    // For now, just navigate to builder - can be expanded later
+  const handleOpenProject = (projectId: string) => {
     navigate('/builder');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <Palette className="w-4 h-4 text-white" />
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Palette className="w-8 h-8 text-blue-600" />
+                  Website Builder
+                </h1>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                Welcome, {user?.firstName}!
+              </span>
+              <UserButton afterSignOutUrl="/" />
+            </div>
           </div>
-          <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Website Builder
-          </h1>
         </div>
-        <UserButton />
       </header>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-6 py-12">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Welcome to Your Dashboard
-          </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Create stunning websites with our drag-and-drop builder or manage your existing projects.
-          </p>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Your Projects</h2>
+          <p className="text-gray-600 dark:text-gray-300">Create and manage your website projects</p>
         </div>
 
-        {/* Action Cards */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {/* Create Website Card */}
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-6 mx-auto">
-              <Plus className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 text-center mb-4">
-              Create New Website
-            </h3>
-            <p className="text-gray-600 text-center mb-6">
-              Start building your website from scratch with our intuitive drag-and-drop interface.
-            </p>
-            <Button 
-              onClick={handleCreateWebsite}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white py-3 text-lg"
+        {/* Create Project Button */}
+        <div className="mb-8">
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-lg">
+                <Plus className="w-5 h-5 mr-2" />
+                Create New Project
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Create New Project</DialogTitle>
+                <DialogDescription>
+                  Enter a name for your new website project.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="project-name" className="text-right">
+                    Name
+                  </Label>
+                  <Input
+                    id="project-name"
+                    value={projectName}
+                    onChange={(e) => setProjectName(e.target.value)}
+                    placeholder="My Awesome Website"
+                    className="col-span-3"
+                    onKeyDown={(e) => e.key === 'Enter' && handleCreateProject()}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleCreateProject} disabled={!projectName.trim()}>
+                  Create Project
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Projects Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {projects.map((project) => (
+            <div
+              key={project.id}
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer border border-gray-200 dark:border-gray-700"
+              onClick={() => handleOpenProject(project.id)}
             >
-              Get Started
-            </Button>
-          </div>
-
-          {/* Previous Websites Card */}
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl mb-6 mx-auto">
-              <History className="w-8 h-8 text-white" />
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <FolderOpen className="w-8 h-8 text-blue-600" />
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    {project.lastModified}
+                  </span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  {project.name}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300 text-sm">
+                  Created on {project.createdAt}
+                </p>
+                <div className="mt-4 flex justify-between items-center">
+                  <Button variant="outline" size="sm">
+                    Open Project
+                  </Button>
+                  <Button variant="ghost" size="sm">
+                    <Settings className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 text-center mb-4">
-              Previous Websites
+          ))}
+        </div>
+
+        {projects.length === 0 && (
+          <div className="text-center py-12">
+            <FolderOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              No projects yet
             </h3>
-            <p className="text-gray-600 text-center mb-6">
-              Access and edit your previously created websites and continue where you left off.
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Create your first website project to get started
             </p>
-            <Button 
-              onClick={handleViewPreviousWebsites}
-              variant="outline"
-              className="w-full border-2 border-gray-300 hover:border-gray-400 text-gray-700 py-3 text-lg"
-            >
-              View Projects
-            </Button>
           </div>
-        </div>
-
-        {/* Features Section */}
-        <div className="mt-16 grid md:grid-cols-3 gap-6 text-center">
-          <div className="p-6">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <Palette className="w-6 h-6 text-blue-600" />
-            </div>
-            <h4 className="font-semibold text-gray-900 mb-2">Drag & Drop Builder</h4>
-            <p className="text-gray-600 text-sm">Easily create websites with our intuitive visual editor</p>
-          </div>
-          <div className="p-6">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <History className="w-6 h-6 text-green-600" />
-            </div>
-            <h4 className="font-semibold text-gray-900 mb-2">Project History</h4>
-            <p className="text-gray-600 text-sm">Keep track of all your website projects in one place</p>
-          </div>
-          <div className="p-6">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <Plus className="w-6 h-6 text-purple-600" />
-            </div>
-            <h4 className="font-semibold text-gray-900 mb-2">Quick Creation</h4>
-            <p className="text-gray-600 text-sm">Start building immediately with pre-designed components</p>
-          </div>
-        </div>
-      </div>
+        )}
+      </main>
     </div>
   );
 };

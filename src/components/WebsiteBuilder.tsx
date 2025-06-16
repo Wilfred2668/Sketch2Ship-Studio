@@ -11,6 +11,9 @@ import { PreviewModal } from './PreviewModal';
 import { ImageGallery } from './ImageGallery';
 import { PublicLinkGenerator } from './PublicLinkGenerator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Button } from './ui/button';
+import { ArrowLeft, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export interface Page {
   id: string;
@@ -21,6 +24,12 @@ export interface Page {
 const DEFAULT_PAGE_NAME = "Home";
 
 export const WebsiteBuilder = () => {
+  const navigate = useNavigate();
+  
+  // Sidebar collapse states
+  const [isPageSidebarCollapsed, setIsPageSidebarCollapsed] = useState(false);
+  const [isComponentSidebarCollapsed, setIsComponentSidebarCollapsed] = useState(false);
+
   // Pages state
   const [pages, setPages] = useState<Page[]>([
     { id: `page-${Date.now()}`, name: DEFAULT_PAGE_NAME, elements: [] }
@@ -87,6 +96,21 @@ export const WebsiteBuilder = () => {
     setSelectedElement(clone.id);
   };
 
+  // Handle navigation for buttons and links
+  const handleElementNavigation = (linkTo?: { type: 'page' | 'url'; value: string }) => {
+    if (!linkTo) return;
+    
+    if (linkTo.type === 'page') {
+      const targetPage = pages.find(p => p.id === linkTo.value);
+      if (targetPage) {
+        setCurrentPageId(linkTo.value);
+        setSelectedElement(null);
+      }
+    } else if (linkTo.type === 'url') {
+      window.open(linkTo.value, '_blank');
+    }
+  };
+
   // New state for image gallery and public links
   const [galleryImages, setGalleryImages] = useState<Array<{
     id: string;
@@ -115,7 +139,6 @@ export const WebsiteBuilder = () => {
     if (pages.length === 1) return;
     const filtered = pages.filter(p => p.id !== deleteId);
     setPages(filtered);
-    // Set active to the first page or previous one
     setCurrentPageId(filtered[0].id);
     setSelectedElement(null);
   };
@@ -208,7 +231,6 @@ export const WebsiteBuilder = () => {
   }, [theme]);
 
   const handleImageSelect = (url: string) => {
-    // If an image element is selected, update it with the new URL
     if (selectedElement) {
       const element = elements.find(el => el.id === selectedElement);
       if (element && element.type === 'image') {
@@ -230,50 +252,91 @@ export const WebsiteBuilder = () => {
         onPreview={() => setShowPreviewModal(true)}
       />
       
-      <div className="flex flex-1 h-[calc(100vh-64px)] w-full">
+      <div className="flex items-center justify-between px-4 py-2 bg-white dark:bg-[#181928] border-b border-gray-200 dark:border-gray-700">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/dashboard')}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Dashboard
+        </Button>
+        
+        <div className="text-sm text-gray-600 dark:text-gray-400">
+          Current page: {pages.find(p => p.id === currentPageId)?.name || 'Unknown'}
+        </div>
+      </div>
+      
+      <div className="flex flex-1 h-[calc(100vh-120px)] w-full">
         {/* PAGES SIDEBAR */}
-        <div className="w-64 bg-white dark:bg-[#181928] border-r border-gray-200 dark:border-gray-700 flex flex-col">
-          <PageSidebar
-            pages={pages}
-            currentPageId={currentPageId}
-            setCurrentPageId={setCurrentPageId}
-            addPage={addPage}
-            deletePage={deletePage}
-            renamePage={renamePage}
-          />
+        <div className={`${isPageSidebarCollapsed ? 'w-12' : 'w-64'} bg-white dark:bg-[#181928] border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300`}>
+          <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700">
+            {!isPageSidebarCollapsed && <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Pages</span>}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsPageSidebarCollapsed(!isPageSidebarCollapsed)}
+            >
+              {isPageSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </Button>
+          </div>
+          {!isPageSidebarCollapsed && (
+            <PageSidebar
+              pages={pages}
+              currentPageId={currentPageId}
+              setCurrentPageId={setCurrentPageId}
+              addPage={addPage}
+              deletePage={deletePage}
+              renamePage={renamePage}
+            />
+          )}
         </div>
 
         {/* COMPONENT LIBRARY SIDEBAR WITH TABS */}
-        <div className="w-80 bg-white dark:bg-[#191b23] border-r border-gray-200 dark:border-gray-700 flex flex-col">
-          <Tabs defaultValue="components" className="flex flex-col h-full">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="components">Components</TabsTrigger>
-                <TabsTrigger value="gallery">Gallery</TabsTrigger>
-                <TabsTrigger value="publish">Publish</TabsTrigger>
-              </TabsList>
-            </div>
-            
-            <TabsContent value="components" className="flex-1 overflow-auto">
-              <ComponentLibrary onAddElement={addElement} />
-            </TabsContent>
-            
-            <TabsContent value="gallery" className="flex-1 overflow-auto p-4">
-              <ImageGallery
-                images={galleryImages}
-                onUpdate={setGalleryImages}
-                onSelectImage={handleImageSelect}
-              />
-            </TabsContent>
-            
-            <TabsContent value="publish" className="flex-1 overflow-auto p-4">
-              <PublicLinkGenerator
-                elements={elements}
-                siteName={pages.find(p => p.id === currentPageId)?.name || 'My Website'}
-                onGenerateLink={handlePublicLinkGenerate}
-              />
-            </TabsContent>
-          </Tabs>
+        <div className={`${isComponentSidebarCollapsed ? 'w-12' : 'w-80'} bg-white dark:bg-[#191b23] border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300`}>
+          <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700">
+            {!isComponentSidebarCollapsed && (
+              <Tabs defaultValue="components" className="flex flex-col h-full w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="components">Components</TabsTrigger>
+                  <TabsTrigger value="gallery">Gallery</TabsTrigger>
+                  <TabsTrigger value="publish">Publish</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsComponentSidebarCollapsed(!isComponentSidebarCollapsed)}
+            >
+              {isComponentSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </Button>
+          </div>
+          
+          {!isComponentSidebarCollapsed && (
+            <Tabs defaultValue="components" className="flex flex-col h-full">
+              <TabsContent value="components" className="flex-1 overflow-auto">
+                <ComponentLibrary onAddElement={addElement} />
+              </TabsContent>
+              
+              <TabsContent value="gallery" className="flex-1 overflow-auto p-4">
+                <ImageGallery
+                  images={galleryImages}
+                  onUpdate={setGalleryImages}
+                  onSelectImage={handleImageSelect}
+                />
+              </TabsContent>
+              
+              <TabsContent value="publish" className="flex-1 overflow-auto p-4">
+                <PublicLinkGenerator
+                  elements={elements}
+                  siteName={pages.find(p => p.id === currentPageId)?.name || 'My Website'}
+                  onGenerateLink={handlePublicLinkGenerate}
+                />
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
 
         {/* CANVAS AREA */}
@@ -289,6 +352,7 @@ export const WebsiteBuilder = () => {
             onRedo={redo}
             canUndo={canUndo}
             canRedo={canRedo}
+            onElementNavigation={handleElementNavigation}
           />
         </main>
 
