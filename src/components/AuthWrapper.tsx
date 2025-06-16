@@ -15,15 +15,15 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
         {children}
       </SignedIn>
       <SignedOut>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-100">
           {/* Header */}
-          <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 px-6 py-4">
+          <header className="bg-white/80 backdrop-blur-sm border-b border-emerald-200 px-6 py-4">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-cyan-600 rounded-lg flex items-center justify-center">
                 <Palette className="w-4 h-4 text-white" />
               </div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Website Builder
+              <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+                Sketch2Ship Studio
               </h1>
             </div>
           </header>
@@ -33,7 +33,7 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
             <div className="text-center mb-16">
               <h1 className="text-5xl font-bold text-gray-900 mb-6">
                 Build Beautiful Websites
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-cyan-600">
                   Without Code
                 </span>
               </h1>
@@ -45,7 +45,7 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
               {/* Auth Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <SignInButton mode="modal">
-                  <Button size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-8 py-3 text-lg">
+                  <Button size="lg" className="bg-gradient-to-r from-emerald-500 to-cyan-600 hover:from-emerald-600 hover:to-cyan-700 px-8 py-3 text-lg">
                     Sign In
                   </Button>
                 </SignInButton>
@@ -59,8 +59,8 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
 
             {/* Features Grid */}
             <div className="grid md:grid-cols-3 gap-8 mb-16">
-              <div className="text-center p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="text-center p-6 bg-white rounded-2xl shadow-lg border border-emerald-100">
+                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Palette className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Visual Builder</h3>
@@ -69,8 +69,8 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
                 </p>
               </div>
               
-              <div className="text-center p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="text-center p-6 bg-white rounded-2xl shadow-lg border border-emerald-100">
+                <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Zap className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Lightning Fast</h3>
@@ -79,8 +79,8 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
                 </p>
               </div>
               
-              <div className="text-center p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="text-center p-6 bg-white rounded-2xl shadow-lg border border-emerald-100">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Globe className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Publish Anywhere</h3>
@@ -91,7 +91,7 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
             </div>
 
             {/* CTA Section */}
-            <div className="text-center bg-gradient-to-r from-blue-500 to-purple-600 rounded-3xl p-12 text-white">
+            <div className="text-center bg-gradient-to-r from-emerald-500 to-cyan-600 rounded-3xl p-12 text-white">
               <h2 className="text-3xl font-bold mb-4">Ready to Start Building?</h2>
               <p className="text-xl mb-8 opacity-90">
                 Join thousands of creators who trust our platform

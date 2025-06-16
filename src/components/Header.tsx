@@ -12,14 +12,14 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onExport, theme = 'light', onToggleTheme, onPreview }) => {
   return (
-    <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between shadow-sm transition-colors">
+    <header className="bg-white dark:bg-gray-900 border-b border-emerald-200 dark:border-emerald-700 px-6 py-3 flex items-center justify-between shadow-sm transition-colors">
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-cyan-600 rounded-lg flex items-center justify-center">
             <Palette className="w-4 h-4 text-white" />
           </div>
-          <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Website Builder
+          <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+            Sketch2Ship Studio
           </h1>
         </div>
       </div>
@@ -42,7 +42,7 @@ export const Header: React.FC<HeaderProps> = ({ onExport, theme = 'light', onTog
         </Button>
         <Button 
           onClick={onExport}
-          className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+          className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-cyan-600 hover:from-emerald-600 hover:to-cyan-700"
         >
           <Download className="w-4 h-4" />
           Export HTML

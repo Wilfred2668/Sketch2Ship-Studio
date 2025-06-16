@@ -280,7 +280,7 @@ export const WebsiteBuilder = () => {
   const selectedElementData = selectedElement ? elements.find(el => el.id === selectedElement) : null;
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex flex-col transition-all duration-300 ${theme === 'dark' ? 'dark' : ''}`}>
+    <div className={`min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-100 dark:from-slate-900 dark:via-emerald-900/10 dark:to-cyan-900/10 flex flex-col transition-all duration-300 ${theme === 'dark' ? 'dark' : ''}`}>
       <Header 
         onExport={() => setShowExportModal(true)}
         theme={theme}
@@ -288,7 +288,7 @@ export const WebsiteBuilder = () => {
         onPreview={() => setShowPreviewModal(true)}
       />
       
-      <div className="flex items-center justify-between px-4 py-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-b border-slate-200/60 dark:border-slate-700/60">
+      <div className="flex items-center justify-between px-4 py-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-b border-emerald-200/60 dark:border-emerald-700/60">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -312,7 +312,7 @@ export const WebsiteBuilder = () => {
           </Button>
         </div>
         
-        <div className="text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full">
+        <div className="text-sm font-medium text-slate-700 dark:text-slate-300 bg-emerald-100 dark:bg-emerald-800/30 px-3 py-1 rounded-full">
           <span className="hidden sm:inline">Current page: </span>
           {pages.find(p => p.id === currentPageId)?.name || 'Unknown'}
         </div>
@@ -320,8 +320,8 @@ export const WebsiteBuilder = () => {
       
       <div className="flex flex-1 h-[calc(100vh-140px)] w-full overflow-hidden">
         {/* PAGES SIDEBAR */}
-        <div className={`${isPageSidebarCollapsed ? 'w-12' : 'w-64 lg:w-72'} bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border-r border-slate-200/60 dark:border-slate-700/60 flex flex-col transition-all duration-300 shadow-lg`}>
-          <div className="flex items-center justify-between p-3 border-b border-slate-200/60 dark:border-slate-700/60">
+        <div className={`${isPageSidebarCollapsed ? 'w-12' : 'w-64 lg:w-72'} bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border-r border-emerald-200/60 dark:border-emerald-700/60 flex flex-col transition-all duration-300 shadow-lg`}>
+          <div className="flex items-center justify-between p-3 border-b border-emerald-200/60 dark:border-emerald-700/60">
             {!isPageSidebarCollapsed && <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Pages</span>}
             <Button
               variant="ghost"
@@ -345,11 +345,11 @@ export const WebsiteBuilder = () => {
         </div>
 
         {/* COMPONENT LIBRARY SIDEBAR WITH TABS */}
-        <div className={`${isComponentSidebarCollapsed ? 'w-12' : 'w-80 lg:w-96'} bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border-r border-slate-200/60 dark:border-slate-700/60 flex flex-col transition-all duration-300 shadow-lg`}>
-          <div className="flex items-center justify-between p-3 border-b border-slate-200/60 dark:border-slate-700/60">
+        <div className={`${isComponentSidebarCollapsed ? 'w-12' : 'w-80 lg:w-96'} bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border-r border-emerald-200/60 dark:border-emerald-700/60 flex flex-col transition-all duration-300 shadow-lg`}>
+          <div className="flex items-center justify-between p-3 border-b border-emerald-200/60 dark:border-emerald-700/60">
             {!isComponentSidebarCollapsed && (
               <Tabs defaultValue="components" className="flex flex-col h-full w-full">
-                <TabsList className="grid w-full grid-cols-3 bg-slate-100 dark:bg-slate-700">
+                <TabsList className="grid w-full grid-cols-3 bg-emerald-100 dark:bg-emerald-800/30">
                   <TabsTrigger value="components" className="text-xs">Components</TabsTrigger>
                   <TabsTrigger value="gallery" className="text-xs">Gallery</TabsTrigger>
                   <TabsTrigger value="publish" className="text-xs">Publish</TabsTrigger>
@@ -410,7 +410,7 @@ export const WebsiteBuilder = () => {
 
         {/* PROPERTIES PANEL */}
         {selectedElement && selectedElementData && (
-          <div className="w-80 lg:w-96 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border-l border-slate-200/60 dark:border-slate-700/60 shadow-lg">
+          <div className="w-80 lg:w-96 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border-l border-emerald-200/60 dark:border-emerald-700/60 shadow-lg">
             <PropertiesPanel
               element={selectedElementData}
               onUpdate={updates => updateElement(selectedElement, updates)}

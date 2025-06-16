@@ -60,18 +60,18 @@ export const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-all duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-100 dark:from-slate-900 dark:via-emerald-900/10 dark:to-cyan-900/10 transition-all duration-300">
       {/* Header */}
-      <header className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-sm border-b border-slate-200/60 dark:border-slate-700/60">
+      <header className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-sm border-b border-emerald-200/60 dark:border-emerald-700/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 via-cyan-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
                     <Palette className="w-5 h-5 text-white" />
                   </div>
-                  Website Builder
+                  Sketch2Ship Studio
                 </h1>
               </div>
             </div>
@@ -80,7 +80,7 @@ export const Dashboard = () => {
                 variant="ghost"
                 size="icon"
                 onClick={toggleTheme}
-                className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
+                className="rounded-full hover:bg-emerald-100 dark:hover:bg-emerald-800/30"
               >
                 {theme === 'dark' ? 
                   <Sun className="w-5 h-5 text-amber-500" /> : 
@@ -107,7 +107,7 @@ export const Dashboard = () => {
         <div className="mb-8">
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+              <Button className="bg-gradient-to-r from-emerald-500 to-cyan-600 hover:from-emerald-600 hover:to-cyan-700 text-white px-6 py-3 text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
                 <Plus className="w-5 h-5 mr-2" />
                 Create New Project
               </Button>
@@ -138,7 +138,7 @@ export const Dashboard = () => {
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="border-slate-300 dark:border-slate-600">
                   Cancel
                 </Button>
-                <Button onClick={handleCreateProject} disabled={!projectName.trim()} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
+                <Button onClick={handleCreateProject} disabled={!projectName.trim()} className="bg-gradient-to-r from-emerald-500 to-cyan-600 hover:from-emerald-600 hover:to-cyan-700">
                   Create Project
                 </Button>
               </DialogFooter>
@@ -151,15 +151,15 @@ export const Dashboard = () => {
           {projects.map((project) => (
             <div
               key={project.id}
-              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer border border-slate-200/60 dark:border-slate-700/60 transform hover:scale-105"
+              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer border border-emerald-200/60 dark:border-emerald-700/60 transform hover:scale-105"
               onClick={() => handleOpenProject(project.id)}
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center shadow-md">
+                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-lg flex items-center justify-center shadow-md">
                     <FolderOpen className="w-6 h-6 text-white" />
                   </div>
-                  <span className="text-sm text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-full">
+                  <span className="text-sm text-slate-500 dark:text-slate-400 bg-emerald-100 dark:bg-emerald-800/30 px-2 py-1 rounded-full">
                     {project.lastModified}
                   </span>
                 </div>
@@ -170,10 +170,10 @@ export const Dashboard = () => {
                   Created on {project.createdAt}
                 </p>
                 <div className="flex justify-between items-center">
-                  <Button variant="outline" size="sm" className="border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">
+                  <Button variant="outline" size="sm" className="border-emerald-300 dark:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-800/20">
                     Open Project
                   </Button>
-                  <Button variant="ghost" size="sm" className="hover:bg-slate-100 dark:hover:bg-slate-700">
+                  <Button variant="ghost" size="sm" className="hover:bg-emerald-100 dark:hover:bg-emerald-800/20">
                     <Settings className="w-4 h-4" />
                   </Button>
                 </div>
@@ -184,8 +184,8 @@ export const Dashboard = () => {
 
         {projects.length === 0 && (
           <div className="text-center py-16">
-            <div className="w-24 h-24 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <FolderOpen className="w-12 h-12 text-slate-400 dark:text-slate-500" />
+            <div className="w-24 h-24 bg-gradient-to-br from-emerald-200 to-cyan-300 dark:from-emerald-700/30 dark:to-cyan-600/30 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FolderOpen className="w-12 h-12 text-emerald-600 dark:text-emerald-400" />
             </div>
             <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
               No projects yet
