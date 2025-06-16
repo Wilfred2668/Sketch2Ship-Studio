@@ -14,7 +14,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Button } from './ui/button';
 import { ArrowLeft, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../contexts/ThemeContext';
 
 export interface Page {
   id: string;
@@ -26,7 +25,6 @@ const DEFAULT_PAGE_NAME = "Home";
 
 export const WebsiteBuilder = () => {
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
   
   // Sidebar collapse states
   const [isPageSidebarCollapsed, setIsPageSidebarCollapsed] = useState(false);
@@ -40,6 +38,7 @@ export const WebsiteBuilder = () => {
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   const { snapshots, saveSnapshot, undo, redo, canUndo, canRedo } = useUndoRedo(
     pages, setPages
@@ -220,6 +219,17 @@ export const WebsiteBuilder = () => {
     }
   }
 
+  // Apply theme to body and root container
+  React.useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
+    }
+  }, [theme]);
+
   const handleImageSelect = (url: string) => {
     if (selectedElement) {
       const element = elements.find(el => el.id === selectedElement);
@@ -234,15 +244,15 @@ export const WebsiteBuilder = () => {
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[#16171a] dark:to-[#101215] flex flex-col transition-colors`}>
+    <div className={`min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[#16171a] dark:to-[#101215] flex flex-col transition-colors ${theme === 'dark' ? 'dark' : ''}`}>
       <Header 
         onExport={() => setShowExportModal(true)}
         theme={theme}
-        onToggleTheme={toggleTheme}
+        onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
         onPreview={() => setShowPreviewModal(true)}
       />
       
-      <div className="flex items-center justify-between px-2 sm:px-4 py-2 bg-white/80 dark:bg-[#181928]/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50">
+      <div className="flex items-center justify-between px-4 py-2 bg-white dark:bg-[#181928] border-b border-gray-200 dark:border-gray-700">
         <Button
           variant="ghost"
           size="sm"
@@ -250,18 +260,18 @@ export const WebsiteBuilder = () => {
           className="flex items-center gap-2"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span className="hidden sm:inline">Back to Dashboard</span>
+          Back to Dashboard
         </Button>
         
-        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
           Current page: {pages.find(p => p.id === currentPageId)?.name || 'Unknown'}
         </div>
       </div>
       
-      <div className="flex flex-1 h-[calc(100vh-120px)] w-full overflow-hidden">
+      <div className="flex flex-1 h-[calc(100vh-120px)] w-full">
         {/* PAGES SIDEBAR */}
-        <div className={`${isPageSidebarCollapsed ? 'w-8 sm:w-12' : 'w-48 sm:w-64'} bg-white/90 dark:bg-[#181928]/90 backdrop-blur-md border-r border-gray-200/50 dark:border-gray-700/50 flex flex-col transition-all duration-300`}>
-          <div className="flex items-center justify-between p-2 border-b border-gray-200/50 dark:border-gray-700/50">
+        <div className={`${isPageSidebarCollapsed ? 'w-12' : 'w-64'} bg-white dark:bg-[#181928] border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300`}>
+          <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700">
             {!isPageSidebarCollapsed && <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Pages</span>}
             <Button
               variant="ghost"
@@ -284,14 +294,14 @@ export const WebsiteBuilder = () => {
         </div>
 
         {/* COMPONENT LIBRARY SIDEBAR WITH TABS */}
-        <div className={`${isComponentSidebarCollapsed ? 'w-8 sm:w-12' : 'w-64 sm:w-80'} bg-white/90 dark:bg-[#191b23]/90 backdrop-blur-md border-r border-gray-200/50 dark:border-gray-700/50 flex flex-col transition-all duration-300`}>
-          <div className="flex items-center justify-between p-2 border-b border-gray-200/50 dark:border-gray-700/50">
+        <div className={`${isComponentSidebarCollapsed ? 'w-12' : 'w-80'} bg-white dark:bg-[#191b23] border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300`}>
+          <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700">
             {!isComponentSidebarCollapsed && (
               <Tabs defaultValue="components" className="flex flex-col h-full w-full">
                 <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="components" className="text-xs">Components</TabsTrigger>
-                  <TabsTrigger value="gallery" className="text-xs">Gallery</TabsTrigger>
-                  <TabsTrigger value="publish" className="text-xs">Publish</TabsTrigger>
+                  <TabsTrigger value="components">Components</TabsTrigger>
+                  <TabsTrigger value="gallery">Gallery</TabsTrigger>
+                  <TabsTrigger value="publish">Publish</TabsTrigger>
                 </TabsList>
               </Tabs>
             )}
@@ -330,7 +340,7 @@ export const WebsiteBuilder = () => {
         </div>
 
         {/* CANVAS AREA */}
-        <main className="flex-1 min-w-0 bg-transparent overflow-hidden">
+        <main className="flex-1 min-w-0 bg-transparent">
           <Canvas
             elements={elements}
             selectedElement={selectedElement}
@@ -348,22 +358,20 @@ export const WebsiteBuilder = () => {
 
         {/* PROPERTIES PANEL */}
         {selectedElement && (
-          <div className="w-64 sm:w-80 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-l border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
-            <PropertiesPanel
-              element={elements.find(el => el.id === selectedElement)!}
-              onUpdate={updates => updateElement(selectedElement, updates)}
-              onClose={() => setSelectedElement(null)}
-              theme={theme}
-              pages={pages}
-              currentPageId={currentPageId}
-            />
-          </div>
+          <PropertiesPanel
+            element={elements.find(el => el.id === selectedElement)!}
+            onUpdate={updates => updateElement(selectedElement, updates)}
+            onClose={() => setSelectedElement(null)}
+            theme={theme}
+            pages={pages}
+            currentPageId={currentPageId}
+          />
         )}
       </div>
 
       {showExportModal && (
         <ExportModal
-          pages={pages}
+          elements={elements}
           onClose={() => setShowExportModal(false)}
         />
       )}
