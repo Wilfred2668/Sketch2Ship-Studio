@@ -267,6 +267,244 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
     );
   };
 
+  const renderStyleControls = () => {
+    return (
+      <div className="space-y-4">
+        {/* Text Color */}
+        <div>
+          <label className="text-xs text-gray-700 dark:text-gray-200 block mb-1">Text Color</label>
+          <div className="flex gap-2">
+            <input
+              type="color"
+              className="w-12 h-8 border rounded cursor-pointer"
+              value={element.styles.color || '#000000'}
+              onChange={e => onUpdate({ styles: { ...element.styles, color: e.target.value } })}
+            />
+            <input
+              className="border rounded flex-1 p-2 bg-background text-sm"
+              value={element.styles.color || ''}
+              onChange={e => onUpdate({ styles: { ...element.styles, color: e.target.value } })}
+              placeholder="#333333 or rgb(51,51,51)"
+            />
+          </div>
+        </div>
+
+        {/* Background Color */}
+        <div>
+          <label className="text-xs text-gray-700 dark:text-gray-200 block mb-1">Background Color</label>
+          <div className="flex gap-2">
+            <input
+              type="color"
+              className="w-12 h-8 border rounded cursor-pointer"
+              value={element.styles.backgroundColor || '#ffffff'}
+              onChange={e => onUpdate({ styles: { ...element.styles, backgroundColor: e.target.value } })}
+            />
+            <input
+              className="border rounded flex-1 p-2 bg-background text-sm"
+              value={element.styles.backgroundColor || ''}
+              onChange={e => onUpdate({ styles: { ...element.styles, backgroundColor: e.target.value } })}
+              placeholder="#fafafa or transparent"
+            />
+          </div>
+        </div>
+
+        {/* Font Size */}
+        <div>
+          <label className="text-xs text-gray-700 dark:text-gray-200 block mb-1">Font Size</label>
+          <div className="flex gap-2">
+            <input
+              type="range"
+              min="8"
+              max="72"
+              className="flex-1"
+              value={parseInt(element.styles.fontSize?.replace('px', '') || '16')}
+              onChange={e => onUpdate({ styles: { ...element.styles, fontSize: e.target.value + 'px' } })}
+            />
+            <input
+              className="border rounded w-20 p-2 bg-background text-sm"
+              value={element.styles.fontSize || ''}
+              onChange={e => onUpdate({ styles: { ...element.styles, fontSize: e.target.value } })}
+              placeholder="16px"
+            />
+          </div>
+        </div>
+
+        {/* Font Family */}
+        <div>
+          <label className="text-xs text-gray-700 dark:text-gray-200 block mb-1">Font Family</label>
+          <select
+            className="border rounded w-full p-2 bg-background text-sm"
+            value={element.styles.fontFamily || ''}
+            onChange={e => onUpdate({ styles: { ...element.styles, fontFamily: e.target.value } })}
+          >
+            <option value="">Default</option>
+            <option value="Arial, sans-serif">Arial</option>
+            <option value="Georgia, serif">Georgia</option>
+            <option value="Times New Roman, serif">Times New Roman</option>
+            <option value="Courier New, monospace">Courier New</option>
+            <option value="Helvetica, sans-serif">Helvetica</option>
+            <option value="Verdana, sans-serif">Verdana</option>
+            <option value="Inter, sans-serif">Inter</option>
+            <option value="Roboto, sans-serif">Roboto</option>
+          </select>
+        </div>
+
+        {/* Font Weight */}
+        <div>
+          <label className="text-xs text-gray-700 dark:text-gray-200 block mb-1">Font Weight</label>
+          <select
+            className="border rounded w-full p-2 bg-background text-sm"
+            value={element.styles.fontWeight || ''}
+            onChange={e => onUpdate({ styles: { ...element.styles, fontWeight: e.target.value } })}
+          >
+            <option value="">Normal</option>
+            <option value="300">Light</option>
+            <option value="400">Normal</option>
+            <option value="500">Medium</option>
+            <option value="600">Semi Bold</option>
+            <option value="700">Bold</option>
+            <option value="800">Extra Bold</option>
+          </select>
+        </div>
+
+        {/* Text Alignment */}
+        <div>
+          <label className="text-xs text-gray-700 dark:text-gray-200 block mb-1">Text Alignment</label>
+          <div className="flex gap-1">
+            {['left', 'center', 'right', 'justify'].map(align => (
+              <button
+                key={align}
+                className={`px-3 py-1 text-xs border rounded ${
+                  element.styles.textAlign === align 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+                onClick={() => onUpdate({ styles: { ...element.styles, textAlign: align as any } })}
+              >
+                {align}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Padding */}
+        <div>
+          <label className="text-xs text-gray-700 dark:text-gray-200 block mb-1">Padding</label>
+          <input
+            className="border rounded w-full p-2 bg-background text-sm"
+            value={element.styles.padding || ''}
+            onChange={e => onUpdate({ styles: { ...element.styles, padding: e.target.value } })}
+            placeholder="12px or 10px 15px"
+          />
+        </div>
+
+        {/* Margin */}
+        <div>
+          <label className="text-xs text-gray-700 dark:text-gray-200 block mb-1">Margin</label>
+          <input
+            className="border rounded w-full p-2 bg-background text-sm"
+            value={element.styles.margin || ''}
+            onChange={e => onUpdate({ styles: { ...element.styles, margin: e.target.value } })}
+            placeholder="10px or 5px 10px"
+          />
+        </div>
+
+        {/* Border */}
+        <div>
+          <label className="text-xs text-gray-700 dark:text-gray-200 block mb-1">Border</label>
+          <input
+            className="border rounded w-full p-2 bg-background text-sm"
+            value={element.styles.border || ''}
+            onChange={e => onUpdate({ styles: { ...element.styles, border: e.target.value } })}
+            placeholder="1px solid #ccc"
+          />
+        </div>
+
+        {/* Border Radius */}
+        <div>
+          <label className="text-xs text-gray-700 dark:text-gray-200 block mb-1">Border Radius</label>
+          <div className="flex gap-2">
+            <input
+              type="range"
+              min="0"
+              max="50"
+              className="flex-1"
+              value={parseInt(element.styles.borderRadius?.replace('px', '') || '0')}
+              onChange={e => onUpdate({ styles: { ...element.styles, borderRadius: e.target.value + 'px' } })}
+            />
+            <input
+              className="border rounded w-20 p-2 bg-background text-sm"
+              value={element.styles.borderRadius || ''}
+              onChange={e => onUpdate({ styles: { ...element.styles, borderRadius: e.target.value } })}
+              placeholder="4px"
+            />
+          </div>
+        </div>
+
+        {/* Width */}
+        {['image', 'video', 'card', 'slideshow', 'divider', 'spacer', 'list', 'quote', 'navigation', 'accordion'].includes(element.type) && (
+          <div>
+            <label className="text-xs text-gray-700 dark:text-gray-200 block mb-1">Width</label>
+            <input
+              className="border rounded w-full p-2 bg-background text-sm"
+              value={element.styles.width || ''}
+              onChange={e => onUpdate({ styles: { ...element.styles, width: e.target.value } })}
+              placeholder="300px or 100%"
+            />
+          </div>
+        )}
+
+        {/* Height */}
+        {['image', 'video', 'card', 'slideshow', 'spacer', 'list', 'quote', 'accordion'].includes(element.type) && (
+          <div>
+            <label className="text-xs text-gray-700 dark:text-gray-200 block mb-1">Height</label>
+            <input
+              className="border rounded w-full p-2 bg-background text-sm"
+              value={element.styles.height || ''}
+              onChange={e => onUpdate({ styles: { ...element.styles, height: e.target.value } })}
+              placeholder="200px or auto"
+            />
+          </div>
+        )}
+
+        {/* Text Decoration */}
+        {['text', 'heading', 'link', 'button'].includes(element.type) && (
+          <div>
+            <label className="text-xs text-gray-700 dark:text-gray-200 block mb-1">Text Decoration</label>
+            <select
+              className="border rounded w-full p-2 bg-background text-sm"
+              value={element.styles.textDecoration || ''}
+              onChange={e => onUpdate({ styles: { ...element.styles, textDecoration: e.target.value } })}
+            >
+              <option value="">None</option>
+              <option value="underline">Underline</option>
+              <option value="line-through">Strikethrough</option>
+              <option value="overline">Overline</option>
+            </select>
+          </div>
+        )}
+
+        {/* Cursor */}
+        {['button', 'link'].includes(element.type) && (
+          <div>
+            <label className="text-xs text-gray-700 dark:text-gray-200 block mb-1">Cursor</label>
+            <select
+              className="border rounded w-full p-2 bg-background text-sm"
+              value={element.styles.cursor || ''}
+              onChange={e => onUpdate({ styles: { ...element.styles, cursor: e.target.value } })}
+            >
+              <option value="">Default</option>
+              <option value="pointer">Pointer</option>
+              <option value="not-allowed">Not Allowed</option>
+              <option value="wait">Wait</option>
+              <option value="text">Text</option>
+            </select>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <aside className={`w-80 fixed top-16 right-0 h-[calc(100vh-64px)] bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 z-50 shadow-lg flex flex-col transition-colors ${theme === 'dark' ? 'dark' : ''}`}>
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
@@ -275,49 +513,18 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           <X className="w-5 h-5 text-gray-500" />
         </button>
       </div>
-      <div className="p-4 flex-1 space-y-4 overflow-auto">
-        {renderContentEditor()}
+      <div className="p-4 flex-1 space-y-6 overflow-auto">
+        {/* Content Editor */}
+        <div>
+          <h4 className="font-medium text-sm text-gray-900 dark:text-white mb-3">Content</h4>
+          {renderContentEditor()}
+        </div>
         
-        {!['slideshow', 'accordion', 'navigation'].includes(element.type) && (
-          <>
-            <div>
-              <label className="text-xs text-gray-700 dark:text-gray-200 block mb-1">Text Color</label>
-              <input
-                className="border rounded w-full p-2 bg-background"
-                value={element.styles.color || ''}
-                onChange={e => onUpdate({ styles: { ...element.styles, color: e.target.value } })}
-                placeholder="#333333"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-gray-700 dark:text-gray-200 block mb-1">Background</label>
-              <input
-                className="border rounded w-full p-2 bg-background"
-                value={element.styles.backgroundColor || ''}
-                onChange={e => onUpdate({ styles: { ...element.styles, backgroundColor: e.target.value } })}
-                placeholder="#fafafa"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-gray-700 dark:text-gray-200 block mb-1">Font Size</label>
-              <input
-                className="border rounded w-full p-2 bg-background"
-                value={element.styles.fontSize || ''}
-                onChange={e => onUpdate({ styles: { ...element.styles, fontSize: e.target.value } })}
-                placeholder="16px"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-gray-700 dark:text-gray-200 block mb-1">Padding</label>
-              <input
-                className="border rounded w-full p-2 bg-background"
-                value={element.styles.padding || ''}
-                onChange={e => onUpdate({ styles: { ...element.styles, padding: e.target.value } })}
-                placeholder="12px"
-              />
-            </div>
-          </>
-        )}
+        {/* Style Controls */}
+        <div>
+          <h4 className="font-medium text-sm text-gray-900 dark:text-white mb-3">Styling</h4>
+          {renderStyleControls()}
+        </div>
       </div>
     </aside>
   );
