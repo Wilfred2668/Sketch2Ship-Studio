@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { UserButton, useUser } from '@clerk/clerk-react';
-import { Plus, FolderOpen, Settings, Palette } from 'lucide-react';
+import { Plus, FolderOpen, Settings, Palette, Moon, Sun } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import {
@@ -15,6 +15,7 @@ import {
 } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface Project {
   id: string;
@@ -26,6 +27,7 @@ interface Project {
 export const Dashboard = () => {
   const { user } = useUser();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
   const [projects, setProjects] = useState<Project[]>([
     {
       id: '1',
@@ -58,21 +60,34 @@ export const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-all duration-300">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b">
+      <header className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-sm border-b border-slate-200/60 dark:border-slate-700/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Palette className="w-8 h-8 text-blue-600" />
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <Palette className="w-5 h-5 text-white" />
+                  </div>
                   Website Builder
                 </h1>
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-700 dark:text-gray-300">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
+              >
+                {theme === 'dark' ? 
+                  <Sun className="w-5 h-5 text-amber-500" /> : 
+                  <Moon className="w-5 h-5 text-slate-600" />
+                }
+              </Button>
+              <span className="text-sm text-slate-700 dark:text-slate-300 hidden sm:block">
                 Welcome, {user?.firstName}!
               </span>
               <UserButton afterSignOutUrl="/" />
@@ -84,29 +99,29 @@ export const Dashboard = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Your Projects</h2>
-          <p className="text-gray-600 dark:text-gray-300">Create and manage your website projects</p>
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">Your Projects</h2>
+          <p className="text-slate-600 dark:text-slate-400">Create and manage your website projects</p>
         </div>
 
         {/* Create Project Button */}
         <div className="mb-8">
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-lg">
+              <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
                 <Plus className="w-5 h-5 mr-2" />
                 Create New Project
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
               <DialogHeader>
-                <DialogTitle>Create New Project</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-slate-900 dark:text-slate-100">Create New Project</DialogTitle>
+                <DialogDescription className="text-slate-600 dark:text-slate-400">
                   Enter a name for your new website project.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="project-name" className="text-right">
+                  <Label htmlFor="project-name" className="text-right text-slate-700 dark:text-slate-300">
                     Name
                   </Label>
                   <Input
@@ -114,16 +129,16 @@ export const Dashboard = () => {
                     value={projectName}
                     onChange={(e) => setProjectName(e.target.value)}
                     placeholder="My Awesome Website"
-                    className="col-span-3"
+                    className="col-span-3 bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100"
                     onKeyDown={(e) => e.key === 'Enter' && handleCreateProject()}
                   />
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="border-slate-300 dark:border-slate-600">
                   Cancel
                 </Button>
-                <Button onClick={handleCreateProject} disabled={!projectName.trim()}>
+                <Button onClick={handleCreateProject} disabled={!projectName.trim()} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
                   Create Project
                 </Button>
               </DialogFooter>
@@ -136,27 +151,29 @@ export const Dashboard = () => {
           {projects.map((project) => (
             <div
               key={project.id}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer border border-gray-200 dark:border-gray-700"
+              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer border border-slate-200/60 dark:border-slate-700/60 transform hover:scale-105"
               onClick={() => handleOpenProject(project.id)}
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <FolderOpen className="w-8 h-8 text-blue-600" />
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center shadow-md">
+                    <FolderOpen className="w-6 h-6 text-white" />
+                  </div>
+                  <span className="text-sm text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-full">
                     {project.lastModified}
                   </span>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
                   {project.name}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
+                <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
                   Created on {project.createdAt}
                 </p>
-                <div className="mt-4 flex justify-between items-center">
-                  <Button variant="outline" size="sm">
+                <div className="flex justify-between items-center">
+                  <Button variant="outline" size="sm" className="border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">
                     Open Project
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="hover:bg-slate-100 dark:hover:bg-slate-700">
                     <Settings className="w-4 h-4" />
                   </Button>
                 </div>
@@ -166,13 +183,15 @@ export const Dashboard = () => {
         </div>
 
         {projects.length === 0 && (
-          <div className="text-center py-12">
-            <FolderOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          <div className="text-center py-16">
+            <div className="w-24 h-24 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FolderOpen className="w-12 h-12 text-slate-400 dark:text-slate-500" />
+            </div>
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
               No projects yet
             </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Create your first website project to get started
+            <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md mx-auto">
+              Create your first website project to get started building amazing websites
             </p>
           </div>
         )}

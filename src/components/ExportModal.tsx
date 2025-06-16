@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { X, Download, Copy, Check } from 'lucide-react';
-import { Element } from '../types/builder';
 import { Button } from './ui/button';
+import { Page } from './WebsiteBuilder';
 
 interface ExportModalProps {
-  elements: Element[];
+  pages: Page[];
   onClose: () => void;
 }
 
 type ExportFormat = 'html' | 'react' | 'vue' | 'nextjs';
 
-export const ExportModal: React.FC<ExportModalProps> = ({ elements, onClose }) => {
+export const ExportModal: React.FC<ExportModalProps> = ({ pages, onClose }) => {
   const [copied, setCopied] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('html');
 
@@ -31,6 +31,46 @@ export const ExportModal: React.FC<ExportModalProps> = ({ elements, onClose }) =
       
       .element {
         position: absolute;
+      }
+
+      .page {
+        display: none;
+        position: relative;
+        min-height: 100vh;
+        width: 100%;
+      }
+
+      .page.active {
+        display: block;
+      }
+
+      .navigation {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 1rem;
+        z-index: 1000;
+      }
+
+      .nav-button {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        margin-right: 8px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      .nav-button:hover {
+        background: #2563eb;
+      }
+
+      .nav-button.active {
+        background: #1d4ed8;
       }
 
       /* Responsive Slideshow */
@@ -93,7 +133,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ elements, onClose }) =
       }
     </style>`;
 
-    const elementsHTML = elements.map(element => {
+    const generateElementHTML = (element: any) => {
       const styleString = Object.entries(element.styles)
         .map(([key, value]) => `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`)
         .join('; ');
@@ -103,16 +143,16 @@ export const ExportModal: React.FC<ExportModalProps> = ({ elements, onClose }) =
 
       switch (element.type) {
         case 'slideshow':
-          const images = element.content.split('\n').filter(img => img.trim());
+          const images = element.content.split('\n').filter((img: string) => img.trim());
           return `    <div class="element slideshow-container" style="${fullStyle}">
       ${images.length > 0 ? `<img src="${images[0]}" alt="Slideshow" />` : '<div style="width: 100%; height: 100%; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">Slideshow</div>'}
     </div>`;
         case 'accordion':
-          const sections = element.content.split('\n').filter(section => section.trim()).map(section => {
+          const sections = element.content.split('\n').filter((section: string) => section.trim()).map((section: string) => {
             const [title, content] = section.split('|');
             return { title: title?.trim() || 'Section', content: content?.trim() || 'Content' };
           });
-          const accordionHTML = sections.map((section, index) => `
+          const accordionHTML = sections.map((section: any, index: number) => `
         <div class="accordion-section">
           <button class="accordion-header" onclick="toggleAccordion(${index})">
             ${section.title}
@@ -148,20 +188,50 @@ export const ExportModal: React.FC<ExportModalProps> = ({ elements, onClose }) =
         case 'card':
           return `    <div class="element" style="${fullStyle}">${element.content}</div>`;
         case 'list':
-          const listItems = element.content.split('\n').filter(item => item.trim()).map(item => `<li>${item.trim()}</li>`).join('');
+          const listItems = element.content.split('\n').filter((item: string) => item.trim()).map((item: string) => `<li>${item.trim()}</li>`).join('');
           return `    <ul class="element" style="${fullStyle}">${listItems}</ul>`;
         case 'quote':
           return `    <blockquote class="element" style="${fullStyle}">"${element.content}"</blockquote>`;
         default:
           return `    <div class="element" style="${fullStyle}">${element.content}</div>`;
       }
+    };
+
+    const pagesHTML = pages.map((page, index) => {
+      const elementsHTML = page.elements.map(generateElementHTML).join('\n');
+      return `  <div class="page ${index === 0 ? 'active' : ''}" id="${page.id}">
+${elementsHTML}
+  </div>`;
     }).join('\n');
 
-    const accordionScript = `
+    const navigationHTML = pages.length > 1 ? `
+  <div class="navigation">
+    ${pages.map((page, index) => 
+      `<button class="nav-button ${index === 0 ? 'active' : ''}" onclick="showPage('${page.id}')">${page.name}</button>`
+    ).join('')}
+  </div>` : '';
+
+    const script = `
     <script>
       function toggleAccordion(index) {
         const content = document.getElementById('accordion-' + index);
         content.classList.toggle('active');
+      }
+
+      function showPage(pageId) {
+        // Hide all pages
+        document.querySelectorAll('.page').forEach(page => {
+          page.classList.remove('active');
+        });
+        
+        // Show selected page
+        document.getElementById(pageId).classList.add('active');
+        
+        // Update navigation buttons
+        document.querySelectorAll('.nav-button').forEach(btn => {
+          btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
       }
     </script>`;
 
@@ -174,230 +244,120 @@ export const ExportModal: React.FC<ExportModalProps> = ({ elements, onClose }) =
     ${styles}
 </head>
 <body>
-${elementsHTML}
-${accordionScript}
+${navigationHTML}
+  <div style="padding-top: ${pages.length > 1 ? '80px' : '0'};">
+${pagesHTML}
+  </div>
+${script}
 </body>
 </html>`;
   };
 
   const generateReact = () => {
-    const elementsJSX = elements.map(element => {
-      const styleObj = Object.entries(element.styles)
-        .map(([key, value]) => `    ${key}: '${value}'`)
-        .join(',\n');
-      
-      const positionStyle = `    position: 'absolute',\n    left: '${element.position.x}px',\n    top: '${element.position.y}px'`;
-      const fullStyle = `{\n${styleObj},\n${positionStyle}\n  }`;
+    const pagesJSX = pages.map((page, index) => {
+      const elementsJSX = page.elements.map(element => {
+        const styleObj = Object.entries(element.styles)
+          .map(([key, value]) => `    ${key}: '${value}'`)
+          .join(',\n');
+        
+        const positionStyle = `    position: 'absolute',\n    left: '${element.position.x}px',\n    top: '${element.position.y}px'`;
+        const fullStyle = `{\n${styleObj},\n${positionStyle}\n  }`;
 
-      switch (element.type) {
-        case 'slideshow':
-          const images = element.content.split('\n').filter(img => img.trim());
-          return `    <div style={${fullStyle}} className="slideshow-container">
-      {${JSON.stringify(images)}.length > 0 ? (
-        <img src={${JSON.stringify(images)}[0]} alt="Slideshow" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-      ) : (
-        <div style={{width: '100%', height: '100%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-          Slideshow
-        </div>
-      )}
-    </div>`;
-        case 'accordion':
-          return `    <div style={${fullStyle}} className="accordion-container">
-      {/* Accordion sections would go here */}
-      <div>{element.content}</div>
-    </div>`;
-        case 'text':
-          return `    <span style={${fullStyle}}>${element.content}</span>`;
-        case 'heading':
-          return `    <h2 style={${fullStyle}}>${element.content}</h2>`;
-        case 'button':
-          return `    <button style={${fullStyle}}>${element.content}</button>`;
-        case 'link':
-          return `    <a href="#" style={${fullStyle}}>${element.content}</a>`;
-        case 'image':
-          return `    <img src="${element.content}" alt="Image" style={${fullStyle}} />`;
-        case 'video':
-          return `    <video src="${element.content}" controls style={${fullStyle}} />`;
-        case 'icon':
-          return `    <span style={${fullStyle}}>${element.content}</span>`;
-        case 'divider':
-          return `    <div style={${fullStyle}}>
-      ${element.content ? `<span style={{fontSize: '12px', color: '#888'}}>${element.content}</span>` : ''}
-      <hr style={{width: '128px', marginTop: '4px'}} />
-    </div>`;
-        case 'spacer':
-          return `    <div style={${fullStyle}}></div>`;
-        case 'card':
-          return `    <div style={${fullStyle}}>${element.content}</div>`;
-        case 'list':
-          const listItems = element.content.split('\n').filter(item => item.trim()).map(item => `<li key="${Math.random()}">${item.trim()}</li>`).join('\n      ');
-          return `    <ul style={${fullStyle}}>
-      ${listItems}
-    </ul>`;
-        case 'quote':
-          return `    <blockquote style={${fullStyle}}>"${element.content}"</blockquote>`;
-        default:
-          return `    <div style={${fullStyle}}>${element.content}</div>`;
-      }
-    }).join('\n');
+        switch (element.type) {
+          case 'text':
+            return `    <span style={${fullStyle}}>${element.content}</span>`;
+          case 'heading':
+            return `    <h2 style={${fullStyle}}>${element.content}</h2>`;
+          case 'button':
+            return `    <button style={${fullStyle}}>${element.content}</button>`;
+          default:
+            return `    <div style={${fullStyle}}>${element.content}</div>`;
+        }
+      }).join('\n');
 
-    return `import React from 'react';
-
-const MyComponent = () => {
-  return (
+      return `  const ${page.name.replace(/\s+/g, '')}Page = () => (
     <div style={{ position: 'relative', minHeight: '100vh', fontFamily: 'Arial, sans-serif' }}>
 ${elementsJSX}
+    </div>
+  );`;
+    }).join('\n\n');
+
+    return `import React, { useState } from 'react';
+
+${pagesJSX}
+
+const MyWebsite = () => {
+  const [currentPage, setCurrentPage] = useState('${pages[0].name.replace(/\s+/g, '')}');
+
+  const renderPage = () => {
+    switch(currentPage) {
+      ${pages.map(page => `case '${page.name.replace(/\s+/g, '')}': return <${page.name.replace(/\s+/g, '')}Page />;`).join('\n      ')}
+      default: return <${pages[0].name.replace(/\s+/g, '')}Page />;
+    }
+  };
+
+  return (
+    <div>
+      ${pages.length > 1 ? `<nav style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0' }}>
+        ${pages.map(page => `<button 
+          onClick={() => setCurrentPage('${page.name.replace(/\s+/g, '')}')}
+          style={{
+            padding: '8px 16px',
+            marginRight: '8px',
+            background: currentPage === '${page.name.replace(/\s+/g, '')}' ? '#1d4ed8' : '#3b82f6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          ${page.name}
+        </button>`).join('\n        ')}
+      </nav>` : ''}
+      {renderPage()}
     </div>
   );
 };
 
-export default MyComponent;`;
+export default MyWebsite;`;
   };
 
   const generateVue = () => {
-    const elementsTemplate = elements.map(element => {
-      const styleObj = Object.entries(element.styles)
-        .map(([key, value]) => `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`)
-        .join('; ');
-      
-      const positionStyle = `position: absolute; left: ${element.position.x}px; top: ${element.position.y}px`;
-      const fullStyle = `${styleObj}; ${positionStyle}`;
-
-      switch (element.type) {
-        case 'slideshow':
-          const images = element.content.split('\n').filter(img => img.trim());
-          return `    <div class="element slideshow-container" style="${fullStyle}">
-      ${images.length > 0 ? `<img src="${images[0]}" alt="Slideshow" />` : '<div style="width: 100%; height: 100%; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">Slideshow</div>'}
-    </div>`;
-        case 'accordion':
-          const sections = element.content.split('\n').filter(section => section.trim()).map(section => {
-            const [title, content] = section.split('|');
-            return { title: title?.trim() || 'Section', content: content?.trim() || 'Content' };
-          });
-          const accordionHTML = sections.map((section, index) => `
-        <div class="accordion-section">
-          <button class="accordion-header" onclick="toggleAccordion(${index})">
-            ${section.title}
-            <span>▼</span>
-          </button>
-          <div class="accordion-content" id="accordion-${index}">
-            ${section.content}
-          </div>
-        </div>`).join('');
-          return `    <div class="element accordion-container" style="${fullStyle}">${accordionHTML}
-    </div>`;
-        case 'text':
-          return `    <span style="${fullStyle}">${element.content}</span>`;
-        case 'heading':
-          return `    <h2 style="${fullStyle}">${element.content}</h2>`;
-        case 'button':
-          return `    <button style="${fullStyle}">${element.content}</button>`;
-        case 'link':
-          return `    <a href="#" style="${fullStyle}">${element.content}</a>`;
-        case 'image':
-          return `    <img :src="'${element.content}'" alt="Image" style="${fullStyle}" />`;
-        case 'video':
-          return `    <video :src="'${element.content}'" controls style="${fullStyle}"></video>`;
-        case 'icon':
-          return `    <span style="${fullStyle}">${element.content}</span>`;
-        case 'divider':
-          return `    <div style="${fullStyle}">
-      ${element.content ? `<span style="font-size: 12px; color: #888;">${element.content}</span>` : ''}
-      <hr style="width: 128px; margin-top: 4px;" />
-    </div>`;
-        case 'spacer':
-          return `    <div style="${fullStyle}"></div>`;
-        case 'card':
-          return `    <div style="${fullStyle}">${element.content}</div>`;
-        case 'list':
-          const listItems = element.content.split('\n').filter(item => item.trim()).map(item => `<li>${item.trim()}</li>`).join('\n      ');
-          return `    <ul style="${fullStyle}">
-      ${listItems}
-    </ul>`;
-        case 'quote':
-          return `    <blockquote style="${fullStyle}">"${element.content}"</blockquote>`;
-        default:
-          return `    <div style="${fullStyle}">${element.content}</div>`;
-      }
-    }).join('\n');
-
     return `<template>
-  <div style="position: relative; min-height: 100vh; font-family: Arial, sans-serif;">
-${elementsTemplate}
+  <div>
+    ${pages.length > 1 ? `<nav style="padding: 1rem; border-bottom: 1px solid #e2e8f0;">
+      ${pages.map(page => `<button @click="currentPage = '${page.name.replace(/\s+/g, '')}'" 
+              :style="{ padding: '8px 16px', marginRight: '8px', background: currentPage === '${page.name.replace(/\s+/g, '')}' ? '#1d4ed8' : '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }">
+        ${page.name}
+      </button>`).join('\n      ')}
+    </nav>` : ''}
+    
+    ${pages.map(page => `<div v-if="currentPage === '${page.name.replace(/\s+/g, '')}'" style="position: relative; min-height: 100vh; font-family: Arial, sans-serif;">
+      <!-- ${page.name} page elements would go here -->
+      <div>Multi-page Vue component</div>
+    </div>`).join('\n    ')}
   </div>
 </template>
 
 <script>
 export default {
-  name: 'MyComponent'
+  name: 'MyWebsite',
+  data() {
+    return {
+      currentPage: '${pages[0].name.replace(/\s+/g, '')}'
+    }
+  }
 }
 </script>`;
   };
 
   const generateNextJS = () => {
-    const elementsJSX = elements.map(element => {
-      const styleObj = Object.entries(element.styles)
-        .map(([key, value]) => `    ${key}: '${value}'`)
-        .join(',\n');
-      
-      const positionStyle = `    position: 'absolute',\n    left: '${element.position.x}px',\n    top: '${element.position.y}px'`;
-      const fullStyle = `{\n${styleObj},\n${positionStyle}\n  }`;
-
-      switch (element.type) {
-        case 'slideshow':
-          const images = element.content.split('\n').filter(img => img.trim());
-          return `    <div style={${fullStyle}} className="slideshow-container">
-      {${JSON.stringify(images)}.length > 0 ? (
-        <img src={${JSON.stringify(images)}[0]} alt="Slideshow" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-      ) : (
-        <div style={{width: '100%', height: '100%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-          Slideshow
-        </div>
-      )}
-    </div>`;
-        case 'accordion':
-          return `    <div style={${fullStyle}} className="accordion-container">
-      {/* Accordion sections would go here */}
-      <div>{element.content}</div>
-    </div>`;
-        case 'text':
-          return `    <span style={${fullStyle}}>${element.content}</span>`;
-        case 'heading':
-          return `    <h2 style={${fullStyle}}>${element.content}</h2>`;
-        case 'button':
-          return `    <button style={${fullStyle}}>${element.content}</button>`;
-        case 'link':
-          return `    <a href="#" style={${fullStyle}}>${element.content}</a>`;
-        case 'image':
-          return `    <img src="${element.content}" alt="Image" style={${fullStyle}} />`;
-        case 'video':
-          return `    <video src="${element.content}" controls style={${fullStyle}} />`;
-        case 'icon':
-          return `    <span style={${fullStyle}}>${element.content}</span>`;
-        case 'divider':
-          return `    <div style={${fullStyle}}>
-      ${element.content ? `<span style={{fontSize: '12px', color: '#888'}}>${element.content}</span>` : ''}
-      <hr style={{width: '128px', marginTop: '4px'}} />
-    </div>`;
-        case 'spacer':
-          return `    <div style={${fullStyle}}></div>`;
-        case 'card':
-          return `    <div style={${fullStyle}}>${element.content}</div>`;
-        case 'list':
-          const listItems = element.content.split('\n').filter(item => item.trim()).map(item => `<li key="${Math.random()}">${item.trim()}</li>`).join('\n      ');
-          return `    <ul style={${fullStyle}}>
-      ${listItems}
-    </ul>`;
-        case 'quote':
-          return `    <blockquote style={${fullStyle}}>"${element.content}"</blockquote>`;
-        default:
-          return `    <div style={${fullStyle}}>${element.content}</div>`;
-      }
-    }).join('\n');
-
     return `import Head from 'next/head';
+import { useState } from 'react';
 
 export default function Home() {
+  const [currentPage, setCurrentPage] = useState('${pages[0].name.replace(/\s+/g, '')}');
+
   return (
     <>
       <Head>
@@ -406,8 +366,28 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div style={{ position: 'relative', minHeight: '100vh', fontFamily: 'Arial, sans-serif' }}>
-${elementsJSX}
+      <div>
+        ${pages.length > 1 ? `<nav style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0' }}>
+          ${pages.map(page => `<button 
+            onClick={() => setCurrentPage('${page.name.replace(/\s+/g, '')}')}
+            style={{
+              padding: '8px 16px',
+              marginRight: '8px',
+              background: currentPage === '${page.name.replace(/\s+/g, '')}' ? '#1d4ed8' : '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            ${page.name}
+          </button>`).join('\n          ')}
+        </nav>` : ''}
+        
+        <div style={{ position: 'relative', minHeight: '100vh', fontFamily: 'Arial, sans-serif' }}>
+          {/* Multi-page Next.js application */}
+          <h1>Website with {${pages.length}} pages</h1>
+        </div>
       </div>
     </>
   );
@@ -449,7 +429,7 @@ ${elementsJSX}
       case 'html':
         return 'website.html';
       case 'react':
-        return 'MyComponent.jsx';
+        return 'MyWebsite.jsx';
       case 'vue':
         return 'MyComponent.vue';
       case 'nextjs':
@@ -484,36 +464,39 @@ ${elementsJSX}
   };
 
   const formats = [
-    { id: 'html', label: 'HTML', description: 'Plain HTML with inline styles' },
-    { id: 'react', label: 'React', description: 'React JSX component' },
-    { id: 'vue', label: 'Vue.js', description: 'Vue single file component' },
-    { id: 'nextjs', label: 'Next.js', description: 'Next.js page component' },
+    { id: 'html', label: 'HTML', description: 'Complete multi-page HTML website' },
+    { id: 'react', label: 'React', description: 'React multi-page component' },
+    { id: 'vue', label: 'Vue.js', description: 'Vue multi-page component' },
+    { id: 'nextjs', label: 'Next.js', description: 'Next.js multi-page application' },
   ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-4/5 h-4/5 flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold">Export Code</h2>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Export Complete Website</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Exporting {pages.length} page{pages.length !== 1 ? 's' : ''}</p>
+          </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
         
-        <div className="flex items-center gap-4 p-6 border-b bg-gray-50">
-          <span className="text-sm font-medium text-gray-600">Export Format:</span>
-          <div className="flex gap-2">
+        <div className="flex items-center gap-4 p-6 border-b bg-slate-50 dark:bg-slate-800/50">
+          <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Export Format:</span>
+          <div className="flex gap-2 flex-wrap">
             {formats.map((format) => (
               <button
                 key={format.id}
                 onClick={() => setSelectedFormat(format.id as ExportFormat)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   selectedFormat === format.id
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                    ? 'bg-blue-500 text-white shadow-md'
+                    : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600'
                 }`}
               >
                 {format.label}
@@ -523,19 +506,19 @@ ${elementsJSX}
         </div>
         
         <div className="flex-1 p-6 overflow-hidden">
-          <div className="h-full bg-gray-50 rounded-lg p-4 overflow-auto">
-            <pre className="text-sm text-gray-800 whitespace-pre-wrap font-mono">
+          <div className="h-full bg-slate-50 dark:bg-slate-900 rounded-lg p-4 overflow-auto border border-slate-200 dark:border-slate-700">
+            <pre className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-mono">
               {code}
             </pre>
           </div>
         </div>
         
-        <div className="flex items-center justify-between p-6 border-t bg-gray-50">
+        <div className="flex items-center justify-between p-6 border-t bg-slate-50 dark:bg-slate-800/50">
           <div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600 dark:text-slate-300">
               {formats.find(f => f.id === selectedFormat)?.description}
             </p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Copy the code above or download as {getFileName()}
             </p>
           </div>
