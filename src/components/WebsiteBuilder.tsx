@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { ComponentLibrary } from './ComponentLibrary';
 import { Canvas } from './Canvas';
@@ -9,6 +8,9 @@ import { PageSidebar } from './PageSidebar';
 import { useUndoRedo } from '../hooks/useUndoRedo';
 import { PropertiesPanel } from './PropertiesPanel';
 import { PreviewModal } from './PreviewModal';
+import { ImageGallery } from './ImageGallery';
+import { PublicLinkGenerator } from './PublicLinkGenerator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
 export interface Page {
   id: string;
@@ -84,6 +86,17 @@ export const WebsiteBuilder = () => {
     setElementsForPage([...elements, clone]);
     setSelectedElement(clone.id);
   };
+
+  // New state for image gallery and public links
+  const [galleryImages, setGalleryImages] = useState<Array<{
+    id: string;
+    name: string;
+    url: string;
+    size: number;
+    type: string;
+  }>>([]);
+
+  const [publicLinks, setPublicLinks] = useState<string[]>([]);
 
   // Page operations
   const addPage = () => {
@@ -194,6 +207,20 @@ export const WebsiteBuilder = () => {
     }
   }, [theme]);
 
+  const handleImageSelect = (url: string) => {
+    // If an image element is selected, update it with the new URL
+    if (selectedElement) {
+      const element = elements.find(el => el.id === selectedElement);
+      if (element && element.type === 'image') {
+        updateElement(selectedElement, { content: url });
+      }
+    }
+  };
+
+  const handlePublicLinkGenerate = (link: string) => {
+    setPublicLinks(prev => [...prev, link]);
+  };
+
   return (
     <div className={`min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[#16171a] dark:to-[#101215] flex flex-col transition-colors ${theme === 'dark' ? 'dark' : ''}`}>
       <Header 
@@ -206,9 +233,6 @@ export const WebsiteBuilder = () => {
       <div className="flex flex-1 h-[calc(100vh-64px)] w-full">
         {/* PAGES SIDEBAR */}
         <div className="w-64 bg-white dark:bg-[#181928] border-r border-gray-200 dark:border-gray-700 flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Pages</span>
-          </div>
           <PageSidebar
             pages={pages}
             currentPageId={currentPageId}
@@ -219,12 +243,37 @@ export const WebsiteBuilder = () => {
           />
         </div>
 
-        {/* COMPONENT LIBRARY SIDEBAR */}
-        <div className="w-64 bg-white dark:bg-[#191b23] border-r border-gray-200 dark:border-gray-700 flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Components</span>
-          </div>
-          <ComponentLibrary onAddElement={addElement} />
+        {/* COMPONENT LIBRARY SIDEBAR WITH TABS */}
+        <div className="w-80 bg-white dark:bg-[#191b23] border-r border-gray-200 dark:border-gray-700 flex flex-col">
+          <Tabs defaultValue="components" className="flex flex-col h-full">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="components">Components</TabsTrigger>
+                <TabsTrigger value="gallery">Gallery</TabsTrigger>
+                <TabsTrigger value="publish">Publish</TabsTrigger>
+              </TabsList>
+            </div>
+            
+            <TabsContent value="components" className="flex-1 overflow-auto">
+              <ComponentLibrary onAddElement={addElement} />
+            </TabsContent>
+            
+            <TabsContent value="gallery" className="flex-1 overflow-auto p-4">
+              <ImageGallery
+                images={galleryImages}
+                onUpdate={setGalleryImages}
+                onSelectImage={handleImageSelect}
+              />
+            </TabsContent>
+            
+            <TabsContent value="publish" className="flex-1 overflow-auto p-4">
+              <PublicLinkGenerator
+                elements={elements}
+                siteName={pages.find(p => p.id === currentPageId)?.name || 'My Website'}
+                onGenerateLink={handlePublicLinkGenerate}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* CANVAS AREA */}

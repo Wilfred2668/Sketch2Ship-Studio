@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Element } from '../types/builder';
+import { DynamicNavigation } from './DynamicNavigation';
+import { DynamicAccordion } from './DynamicAccordion';
 
 interface DraggableElementProps {
   element: Element;
@@ -398,79 +400,53 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
 
       case 'accordion':
         const sections = element.content ? element.content.split('\n').filter(Boolean) : [];
-        const [openSections, setOpenSections] = useState<number[]>([]);
-
-        const toggleSection = (index: number) => {
-          setOpenSections(prev =>
-            prev.includes(index)
-              ? prev.filter(i => i !== index)
-              : [...prev, index]
-          );
-        };
+        const accordionSections = sections.map((section, index) => {
+          const [title, content] = section.split('|');
+          return {
+            id: `section-${index}`,
+            title: title || `Section ${index + 1}`,
+            content: content || 'Content here...',
+            isOpen: false
+          };
+        });
 
         return (
-          <div {...commonProps} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            {sections.length > 0 ? (
-              sections.map((section, index) => {
-                const [title, content] = section.split('|');
-                const isOpen = openSections.includes(index);
-
-                return (
-                  <div key={index} className="border-b border-gray-200 last:border-b-0">
-                    <button
-                      className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 font-medium text-sm"
-                      onClick={() => toggleSection(index)}
-                    >
-                      <div className="flex justify-between items-center">
-                        <span>{title || `Section ${index + 1}`}</span>
-                        <span className={`transform transition-transform ${isOpen ? 'rotate-180' : ''}`}>
-                          ▼
-                        </span>
-                      </div>
-                    </button>
-                    {isOpen && (
-                      <div className="px-4 py-3 text-sm text-gray-700">
-                        {content || 'Content here...'}
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-500 p-4">
-                <span>Accordion Placeholder</span>
-              </div>
-            )}
+          <div {...commonProps}>
+            <DynamicAccordion
+              sections={accordionSections}
+              onUpdate={(newSections) => {
+                const newContent = newSections.map(s => `${s.title}|${s.content}`).join('\n');
+                onUpdate({ content: newContent });
+              }}
+              style={{ position: 'relative', cursor: 'default' }}
+              className="min-w-[300px]"
+            />
           </div>
         );
 
       case 'navigation':
         const navItems = element.content ? element.content.split('\n').filter(Boolean) : [];
-        
+        const navigationItems = navItems.map((item, index) => {
+          const [label, url] = item.split('|');
+          return {
+            id: `nav-${index}`,
+            label: label || `Link ${index + 1}`,
+            url: url || '#'
+          };
+        });
+
         return (
-          <nav {...commonProps} className="bg-white border border-gray-200">
-            {navItems.length > 0 ? (
-              <ul className="flex space-x-0">
-                {navItems.map((item, index) => {
-                  const [label, url] = item.split('|');
-                  return (
-                    <li key={index}>
-                      <a 
-                        href={url || '#'} 
-                        className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 border-r border-gray-200 last:border-r-0"
-                      >
-                        {label || `Link ${index + 1}`}
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-500 p-4">
-                <span>Navigation Placeholder</span>
-              </div>
-            )}
-          </nav>
+          <div {...commonProps}>
+            <DynamicNavigation
+              items={navigationItems}
+              onUpdate={(newItems) => {
+                const newContent = newItems.map(item => `${item.label}|${item.url}`).join('\n');
+                onUpdate({ content: newContent });
+              }}
+              style={{ position: 'relative', cursor: 'default' }}
+              className="min-w-[400px]"
+            />
+          </div>
         );
 
       default:
@@ -482,149 +458,149 @@ export const DraggableElement: React.FC<DraggableElementProps> = ({
     }
   };
 
-// Replace the "withResizeHandles" helper to use better responsiveness and bigger handle areas:
-const withResizeHandles = (children: React.ReactNode) => {
-  if (!isResizableType || !isSelected) return children;
+  // Replace the "withResizeHandles" helper to use better responsiveness and bigger handle areas:
+  const withResizeHandles = (children: React.ReactNode) => {
+    if (!isResizableType || !isSelected) return children;
 
-  // Responsive handle size
-  const handleSize = 24;
+    // Responsive handle size
+    const handleSize = 24;
 
-  return (
-    <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-      {children}
-      {/* Right handle */}
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          right: -handleSize / 2,
-          width: handleSize,
-          height: "100%",
-          cursor: "ew-resize",
-          zIndex: 2,
-          background: "transparent",
-          pointerEvents: "all",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          touchAction: "none",
-        }}
-        className="max-sm:w-8"
-        onMouseDown={(e) => {
-          e.stopPropagation();
-          setResizing({ direction: "right" });
-          setResizeStart({
-            x: e.clientX,
-            y: e.clientY,
-            width:
-              parseInt(element.styles.width as any, 10) ||
-              elementRef.current?.offsetWidth ||
-              100,
-            height:
-              parseInt(element.styles.height as any, 10) ||
-              elementRef.current?.offsetHeight ||
-              50,
-          });
-        }}
-        onTouchStart={(e) => {
-          e.stopPropagation();
-          setResizing({ direction: "right" });
-          setResizeStart({
-            x: e.touches[0].clientX,
-            y: e.touches[0].clientY,
-            width:
-              parseInt(element.styles.width as any, 10) ||
-              elementRef.current?.offsetWidth ||
-              100,
-            height:
-              parseInt(element.styles.height as any, 10) ||
-              elementRef.current?.offsetHeight ||
-              50,
-          });
-        }}
-      >
-        <div className="w-4 h-10 max-sm:h-8 rounded bg-blue-400 opacity-70 hover:opacity-100 transition" />
-      </div>
-      {/* Bottom handle */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          bottom: -handleSize / 2,
-          width: "100%",
-          height: handleSize,
-          cursor: "ns-resize",
-          zIndex: 2,
-          background: "transparent",
-          pointerEvents: "all",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          touchAction: "none"
-        }}
-        className="max-sm:h-8"
-        onMouseDown={(e) => {
-          e.stopPropagation();
-          setResizing({ direction: "bottom" });
-          setResizeStart({
-            x: e.clientX,
-            y: e.clientY,
-            width:
-              parseInt(element.styles.width as any, 10) ||
-              elementRef.current?.offsetWidth ||
-              100,
-            height:
-              parseInt(element.styles.height as any, 10) ||
-              elementRef.current?.offsetHeight ||
-              50,
-          });
-        }}
-        onTouchStart={(e) => {
-          e.stopPropagation();
-          setResizing({ direction: "bottom" });
-          setResizeStart({
-            x: e.touches[0].clientX,
-            y: e.touches[0].clientY,
-            width:
-              parseInt(element.styles.width as any, 10) ||
-              elementRef.current?.offsetWidth ||
-              100,
-            height:
-              parseInt(element.styles.height as any, 10) ||
-              elementRef.current?.offsetHeight ||
-              50,
-          });
-        }}
-      >
-        <div className="h-4 w-10 max-sm:w-8 rounded bg-blue-400 opacity-70 hover:opacity-100 transition" />
-      </div>
-    </div>
-  );
-};
-
-// Update wrapIfResizable for responsiveness & clamp size on mobile:
-const wrapIfResizable = (node: React.ReactNode) => {
-  if (isResizableType) {
     return (
-      <div
-        className="relative max-w-full max-h-full w-full md:w-auto"
-        style={{
-          width: element.styles.width || "100%",
-          height: element.styles.height || "auto",
-          minWidth: "48px",
-          minHeight: "32px",
-          // clamp possible size in mobile
-          maxWidth: "100vw",
-          maxHeight: "80vh",
-        }}
-      >
-        {node}
-        {withResizeHandles(null)}
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        {children}
+        {/* Right handle */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            right: -handleSize / 2,
+            width: handleSize,
+            height: "100%",
+            cursor: "ew-resize",
+            zIndex: 2,
+            background: "transparent",
+            pointerEvents: "all",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            touchAction: "none",
+          }}
+          className="max-sm:w-8"
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            setResizing({ direction: "right" });
+            setResizeStart({
+              x: e.clientX,
+              y: e.clientY,
+              width:
+                parseInt(element.styles.width as any, 10) ||
+                elementRef.current?.offsetWidth ||
+                100,
+              height:
+                parseInt(element.styles.height as any, 10) ||
+                elementRef.current?.offsetHeight ||
+                50,
+            });
+          }}
+          onTouchStart={(e) => {
+            e.stopPropagation();
+            setResizing({ direction: "right" });
+            setResizeStart({
+              x: e.touches[0].clientX,
+              y: e.touches[0].clientY,
+              width:
+                parseInt(element.styles.width as any, 10) ||
+                elementRef.current?.offsetWidth ||
+                100,
+              height:
+                parseInt(element.styles.height as any, 10) ||
+                elementRef.current?.offsetHeight ||
+                50,
+            });
+          }}
+        >
+          <div className="w-4 h-10 max-sm:h-8 rounded bg-blue-400 opacity-70 hover:opacity-100 transition" />
+        </div>
+        {/* Bottom handle */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            bottom: -handleSize / 2,
+            width: "100%",
+            height: handleSize,
+            cursor: "ns-resize",
+            zIndex: 2,
+            background: "transparent",
+            pointerEvents: "all",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            touchAction: "none"
+          }}
+          className="max-sm:h-8"
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            setResizing({ direction: "bottom" });
+            setResizeStart({
+              x: e.clientX,
+              y: e.clientY,
+              width:
+                parseInt(element.styles.width as any, 10) ||
+                elementRef.current?.offsetWidth ||
+                100,
+              height:
+                parseInt(element.styles.height as any, 10) ||
+                elementRef.current?.offsetHeight ||
+                50,
+            });
+          }}
+          onTouchStart={(e) => {
+            e.stopPropagation();
+            setResizing({ direction: "bottom" });
+            setResizeStart({
+              x: e.touches[0].clientX,
+              y: e.touches[0].clientY,
+              width:
+                parseInt(element.styles.width as any, 10) ||
+                elementRef.current?.offsetWidth ||
+                100,
+              height:
+                parseInt(element.styles.height as any, 10) ||
+                elementRef.current?.offsetHeight ||
+                50,
+            });
+          }}
+        >
+          <div className="h-4 w-10 max-sm:w-8 rounded bg-blue-400 opacity-70 hover:opacity-100 transition" />
+        </div>
       </div>
     );
-  }
-  return node;
-};
+  };
+
+  // Update wrapIfResizable for responsiveness & clamp size on mobile:
+  const wrapIfResizable = (node: React.ReactNode) => {
+    if (isResizableType) {
+      return (
+        <div
+          className="relative max-w-full max-h-full w-full md:w-auto"
+          style={{
+            width: element.styles.width || "100%",
+            height: element.styles.height || "auto",
+            minWidth: "48px",
+            minHeight: "32px",
+            // clamp possible size in mobile
+            maxWidth: "100vw",
+            maxHeight: "80vh",
+          }}
+        >
+          {node}
+          {withResizeHandles(null)}
+        </div>
+      );
+    }
+    return node;
+  };
 
   return (
     <div
