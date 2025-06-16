@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserButton, useUser } from '@clerk/clerk-react';
-import { Plus, FolderOpen, Settings, Palette, Moon, Sun } from 'lucide-react';
+import { Plus, FolderOpen, Settings, Palette, Moon, Sun, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import {
@@ -16,10 +16,13 @@ import {
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../hooks/use-toast';
 
 interface Project {
   id: string;
   name: string;
+  pages: any[];
+  currentPageId: string;
   createdAt: string;
   lastModified: string;
 }
@@ -28,35 +31,74 @@ export const Dashboard = () => {
   const { user } = useUser();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: '1',
-      name: 'Sample Website',
-      createdAt: '2024-01-15',
-      lastModified: '2024-01-20'
-    }
-  ]);
+  const { toast } = useToast();
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [projectName, setProjectName] = useState('');
 
-  const handleCreateProject = () => {
-    if (projectName.trim()) {
-      const newProject: Project = {
-        id: Date.now().toString(),
-        name: projectName.trim(),
-        createdAt: new Date().toISOString().split('T')[0],
-        lastModified: new Date().toISOString().split('T')[0]
-      };
-      setProjects(prev => [newProject, ...prev]);
-      setProjectName('');
-      setIsDialogOpen(false);
-      // Navigate to builder with the new project
-      navigate('/builder');
+  // Load projects from localStorage on component mount
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  const loadProjects = () => {
+    try {
+      const savedProjects = JSON.parse(localStorage.getItem('websiteBuilderProjects') || '[]');
+      setProjects(savedProjects.sort((a: Project, b: Project) => 
+        new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
+      ));
+    } catch (error) {
+      console.error('Failed to load projects:', error);
+      setProjects([]);
     }
   };
 
-  const handleOpenProject = (projectId: string) => {
-    navigate('/builder');
+  const handleCreateProject = () => {
+    if (projectName.trim()) {
+      // Navigate to builder with project name as query parameter
+      navigate(`/builder?projectName=${encodeURIComponent(projectName.trim())}`);
+      setProjectName('');
+      setIsDialogOpen(false);
+    }
+  };
+
+  const handleOpenProject = (project: Project) => {
+    // Navigate to builder with project ID as query parameter
+    navigate(`/builder?projectId=${project.id}`);
+  };
+
+  const handleDeleteProject = (projectId: string, projectName: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent opening the project
+    
+    if (window.confirm(`Are you sure you want to delete "${projectName}"? This action cannot be undone.`)) {
+      try {
+        const savedProjects = JSON.parse(localStorage.getItem('websiteBuilderProjects') || '[]');
+        const filteredProjects = savedProjects.filter((p: Project) => p.id !== projectId);
+        localStorage.setItem('websiteBuilderProjects', JSON.stringify(filteredProjects));
+        
+        loadProjects(); // Reload the projects list
+        
+        toast({
+          title: "Project Deleted",
+          description: `"${projectName}" has been deleted successfully.`,
+        });
+      } catch (error) {
+        console.error('Failed to delete project:', error);
+        toast({
+          title: "Delete Failed",
+          description: "Failed to delete the project. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch {
+      return dateString;
+    }
   };
 
   return (
@@ -152,22 +194,32 @@ export const Dashboard = () => {
             <div
               key={project.id}
               className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer border border-emerald-200/60 dark:border-emerald-700/60 transform hover:scale-105"
-              onClick={() => handleOpenProject(project.id)}
+              onClick={() => handleOpenProject(project)}
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-lg flex items-center justify-center shadow-md">
                     <FolderOpen className="w-6 h-6 text-white" />
                   </div>
-                  <span className="text-sm text-slate-500 dark:text-slate-400 bg-emerald-100 dark:bg-emerald-800/30 px-2 py-1 rounded-full">
-                    {project.lastModified}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-500 dark:text-slate-400 bg-emerald-100 dark:bg-emerald-800/30 px-2 py-1 rounded-full">
+                      {formatDate(project.lastModified)}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleDeleteProject(project.id, project.name, e)}
+                      className="hover:bg-red-100 dark:hover:bg-red-800/20 text-red-600 dark:text-red-400"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
                 <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
                   {project.name}
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
-                  Created on {project.createdAt}
+                  Created: {formatDate(project.createdAt)} • {project.pages?.length || 1} pages
                 </p>
                 <div className="flex justify-between items-center">
                   <Button variant="outline" size="sm" className="border-emerald-300 dark:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-800/20">
@@ -191,7 +243,7 @@ export const Dashboard = () => {
               No projects yet
             </h3>
             <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md mx-auto">
-              Create your first website project to get started building amazing websites
+              Create your first website project to get started building amazing websites with Sketch2Ship Studio
             </p>
           </div>
         )}

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { ComponentLibrary } from './ComponentLibrary';
 import { Canvas } from './Canvas';
 import { Header } from './Header';
@@ -13,7 +13,7 @@ import { PublicLinkGenerator } from './PublicLinkGenerator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Button } from './ui/button';
 import { ArrowLeft, ChevronLeft, ChevronRight, Menu, X, Save } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { useToast } from '../hooks/use-toast';
 
@@ -23,16 +23,31 @@ export interface Page {
   elements: Element[];
 }
 
+interface SavedProject {
+  id: string;
+  name: string;
+  pages: Page[];
+  currentPageId: string;
+  createdAt: string;
+  lastModified: string;
+}
+
 const DEFAULT_PAGE_NAME = "Home";
 
 export const WebsiteBuilder = () => {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   
   // Sidebar collapse states
   const [isPageSidebarCollapsed, setIsPageSidebarCollapsed] = useState(false);
   const [isComponentSidebarCollapsed, setIsComponentSidebarCollapsed] = useState(false);
+
+  // Project state
+  const [projectId, setProjectId] = useState<string>('');
+  const [projectName, setProjectName] = useState('My Website Project');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Pages state
   const [pages, setPages] = useState<Page[]>([
@@ -42,8 +57,60 @@ export const WebsiteBuilder = () => {
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [projectName, setProjectName] = useState('My Website Project');
-  const [isSaving, setIsSaving] = useState(false);
+
+  // Load project on component mount
+  useEffect(() => {
+    const projectIdFromUrl = searchParams.get('projectId');
+    const projectNameFromUrl = searchParams.get('projectName');
+    
+    if (projectIdFromUrl) {
+      // Load existing project
+      loadProject(projectIdFromUrl);
+    } else if (projectNameFromUrl) {
+      // Create new project with given name
+      const newProjectId = `project-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      setProjectId(newProjectId);
+      setProjectName(projectNameFromUrl);
+      const initialPageId = `page-${Date.now()}`;
+      const initialPages = [{ id: initialPageId, name: DEFAULT_PAGE_NAME, elements: [] }];
+      setPages(initialPages);
+      setCurrentPageId(initialPageId);
+    } else {
+      // Create completely new project
+      const newProjectId = `project-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      setProjectId(newProjectId);
+    }
+  }, [searchParams]);
+
+  const loadProject = (projectIdToLoad: string) => {
+    try {
+      const savedProjects = JSON.parse(localStorage.getItem('websiteBuilderProjects') || '[]');
+      const project = savedProjects.find((p: SavedProject) => p.id === projectIdToLoad);
+      
+      if (project) {
+        setProjectId(project.id);
+        setProjectName(project.name);
+        setPages(project.pages);
+        setCurrentPageId(project.currentPageId);
+        console.log('Project loaded successfully:', project.name);
+        toast({
+          title: "Project Loaded",
+          description: `"${project.name}" has been loaded successfully.`,
+        });
+      } else {
+        console.log('Project not found, creating new one');
+        const newProjectId = `project-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+        setProjectId(newProjectId);
+      }
+    } catch (error) {
+      console.error('Failed to load project:', error);
+      toast({
+        title: "Load Failed",
+        description: "Failed to load the project. Starting with a new project.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const { snapshots, saveSnapshot, undo, redo, canUndo, canRedo } = useUndoRedo(
     pages, setPages
@@ -55,10 +122,12 @@ export const WebsiteBuilder = () => {
 
   // Save project functionality
   const saveProject = async () => {
+    if (!projectId) return;
+    
     setIsSaving(true);
     try {
-      const projectData = {
-        id: `project-${Date.now()}`,
+      const projectData: SavedProject = {
+        id: projectId,
         name: projectName,
         pages,
         currentPageId,
@@ -68,21 +137,28 @@ export const WebsiteBuilder = () => {
 
       // Save to localStorage
       const savedProjects = JSON.parse(localStorage.getItem('websiteBuilderProjects') || '[]');
-      const existingProjectIndex = savedProjects.findIndex((p: any) => p.name === projectName);
+      const existingProjectIndex = savedProjects.findIndex((p: SavedProject) => p.id === projectId);
       
       if (existingProjectIndex !== -1) {
-        savedProjects[existingProjectIndex] = { ...projectData, createdAt: savedProjects[existingProjectIndex].createdAt };
+        // Update existing project, keep original creation date
+        savedProjects[existingProjectIndex] = { 
+          ...projectData, 
+          createdAt: savedProjects[existingProjectIndex].createdAt 
+        };
       } else {
+        // Add new project
         savedProjects.push(projectData);
       }
       
       localStorage.setItem('websiteBuilderProjects', JSON.stringify(savedProjects));
       
+      console.log('Project saved successfully:', projectData);
       toast({
         title: "Project Saved",
         description: `"${projectName}" has been saved successfully.`,
       });
     } catch (error) {
+      console.error('Save failed:', error);
       toast({
         title: "Save Failed",
         description: "Failed to save the project. Please try again.",
@@ -92,6 +168,17 @@ export const WebsiteBuilder = () => {
       setIsSaving(false);
     }
   };
+
+  // Auto-save every 30 seconds
+  useEffect(() => {
+    if (!projectId) return;
+    
+    const autoSaveInterval = setInterval(() => {
+      saveProject();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(autoSaveInterval);
+  }, [projectId, pages, currentPageId, projectName]);
 
   // Utilities to update elements on the current page only
   const setElementsForPage = useCallback((newElements: Element[]) => {
@@ -304,7 +391,7 @@ export const WebsiteBuilder = () => {
             variant="outline"
             size="sm"
             onClick={saveProject}
-            disabled={isSaving}
+            disabled={isSaving || !projectId}
             className="flex items-center gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-600 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
           >
             <Save className="w-4 h-4" />
@@ -313,8 +400,8 @@ export const WebsiteBuilder = () => {
         </div>
         
         <div className="text-sm font-medium text-slate-700 dark:text-slate-300 bg-emerald-100 dark:bg-emerald-800/30 px-3 py-1 rounded-full">
-          <span className="hidden sm:inline">Current page: </span>
-          {pages.find(p => p.id === currentPageId)?.name || 'Unknown'}
+          <span className="hidden sm:inline">Project: </span>
+          {projectName} - {pages.find(p => p.id === currentPageId)?.name || 'Unknown'}
         </div>
       </div>
       
