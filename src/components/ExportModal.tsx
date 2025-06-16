@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { X, Download, Copy, Check } from 'lucide-react';
 import { Button } from './ui/button';
@@ -27,17 +28,25 @@ export const ExportModal: React.FC<ExportModalProps> = ({ pages, onClose }) => {
         font-family: Arial, sans-serif;
         position: relative;
         min-height: 100vh;
+        background: white;
       }
       
       .element {
         position: absolute;
+        user-select: none;
       }
 
       .page {
         display: none;
         position: relative;
-        min-height: 100vh;
-        width: 100%;
+        width: 800px;
+        height: 600px;
+        background: white;
+        margin: 20px auto;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
       }
 
       .page.active {
@@ -53,30 +62,107 @@ export const ExportModal: React.FC<ExportModalProps> = ({ pages, onClose }) => {
         border-bottom: 1px solid #e2e8f0;
         padding: 1rem;
         z-index: 1000;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
       }
 
       .nav-button {
-        background: #ea580c;
+        background: linear-gradient(to right, #ea580c, #dc2626);
         color: white;
         border: none;
         padding: 8px 16px;
         margin-right: 8px;
-        border-radius: 4px;
+        border-radius: 6px;
         cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s ease;
       }
 
       .nav-button:hover {
-        background: #dc2626;
+        background: linear-gradient(to right, #dc2626, #b91c1c);
+        transform: translateY(-1px);
       }
 
       .nav-button.active {
-        background: #b91c1c;
+        background: linear-gradient(to right, #b91c1c, #991b1b);
       }
 
-      /* Responsive Slideshow */
+      /* Navigation Element Styles */
+      .element-navigation {
+        display: flex;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .element-navigation .nav-link {
+        padding: 12px 16px;
+        text-decoration: none;
+        color: #374151;
+        border-right: 1px solid #e2e8f0;
+        transition: background-color 0.2s ease;
+        font-weight: 500;
+      }
+
+      .element-navigation .nav-link:last-child {
+        border-right: none;
+      }
+
+      .element-navigation .nav-link:hover {
+        background: #f9fafb;
+      }
+
+      /* Accordion Element Styles */
+      .element-accordion {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .accordion-item {
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      .accordion-item:last-child {
+        border-bottom: none;
+      }
+
+      .accordion-header {
+        width: 100%;
+        padding: 12px 16px;
+        background: #f9fafb;
+        border: none;
+        text-align: left;
+        cursor: pointer;
+        font-weight: 500;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.2s ease;
+      }
+
+      .accordion-header:hover {
+        background: #f1f5f9;
+      }
+
+      .accordion-content {
+        padding: 12px 16px;
+        background: white;
+        display: none;
+      }
+
+      .accordion-content.open {
+        display: block;
+      }
+
+      /* Slideshow Styles */
       .slideshow-container {
         position: relative;
         overflow: hidden;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
       }
       
       .slideshow-container img {
@@ -85,44 +171,84 @@ export const ExportModal: React.FC<ExportModalProps> = ({ pages, onClose }) => {
         object-fit: cover;
       }
 
-      /* Responsive Accordion */
-      .accordion-container {
-        width: 100%;
-      }
-      
-      .accordion-section {
-        border-bottom: 1px solid #e2e8f0;
-      }
-      
-      .accordion-header {
-        width: 100%;
-        padding: 12px 16px;
-        background: #f8fafc;
-        border: none;
-        text-align: left;
-        cursor: pointer;
-        font-weight: 500;
+      .slideshow-dots {
+        position: absolute;
+        bottom: 8px;
+        left: 50%;
+        transform: translateX(-50%);
         display: flex;
-        justify-content: space-between;
-        align-items: center;
+        gap: 4px;
       }
-      
-      .accordion-header:hover {
-        background: #f1f5f9;
+
+      .slideshow-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        transition: background-color 0.2s ease;
       }
-      
-      .accordion-content {
-        padding: 12px 16px;
+
+      .slideshow-dot.active {
         background: white;
-        display: none;
       }
-      
-      .accordion-content.active {
-        display: block;
+
+      /* Button Styles */
+      .element button {
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .element button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      /* Image Styles */
+      .element img {
+        border-radius: 8px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Card Styles */
+      .element-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: box-shadow 0.2s ease;
+      }
+
+      .element-card:hover {
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+
+      /* List Styles */
+      .element ul {
+        list-style-type: disc;
+        list-style-position: inside;
+      }
+
+      .element ul li {
+        margin-bottom: 4px;
+        line-height: 1.5;
+      }
+
+      /* Quote Styles */
+      .element blockquote {
+        font-style: italic;
+        border-left: 4px solid #3b82f6;
+        padding-left: 16px;
+        color: #374151;
+        line-height: 1.6;
       }
 
       /* Responsive Design */
       @media (max-width: 768px) {
+        .page {
+          width: 95%;
+          height: auto;
+          min-height: 600px;
+        }
+        
         .element {
           position: relative !important;
           left: auto !important;
@@ -134,64 +260,103 @@ export const ExportModal: React.FC<ExportModalProps> = ({ pages, onClose }) => {
     </style>`;
 
     const generateElementHTML = (element: any) => {
+      // Convert React style object to CSS string
       const styleString = Object.entries(element.styles)
-        .map(([key, value]) => `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`)
+        .map(([key, value]) => {
+          // Convert camelCase to kebab-case
+          const cssKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+          return `${cssKey}: ${value}`;
+        })
         .join('; ');
 
       const positionStyle = `left: ${element.position.x}px; top: ${element.position.y}px;`;
       const fullStyle = `${styleString}; ${positionStyle}`;
 
       switch (element.type) {
+        case 'navigation':
+          const navItems = element.content.split('\n').filter(Boolean);
+          return `    <nav class="element element-navigation" style="${fullStyle}">
+      ${navItems.map(item => {
+        const [label, url] = item.split('|');
+        return `<a href="${url || '#'}" class="nav-link">${label || 'Link'}</a>`;
+      }).join('\n      ')}
+    </nav>`;
+
+        case 'accordion':
+          const sections = element.content.split('\n').filter(Boolean);
+          return `    <div class="element element-accordion" style="${fullStyle}">
+      ${sections.map((section, index) => {
+        const [title, content] = section.split('|');
+        return `<div class="accordion-item">
+        <button class="accordion-header" onclick="toggleAccordion(${index})">
+          ${title || 'Section'}
+          <span>▼</span>
+        </button>
+        <div class="accordion-content" id="content-${index}">
+          ${content || 'Content'}
+        </div>
+      </div>`;
+      }).join('\n      ')}
+    </div>`;
+
         case 'slideshow':
           const images = element.content.split('\n').filter((img: string) => img.trim());
           return `    <div class="element slideshow-container" style="${fullStyle}">
-      ${images.length > 0 ? `<img src="${images[0]}" alt="Slideshow" />` : '<div style="width: 100%; height: 100%; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">Slideshow</div>'}
+      ${images.length > 0 ? `<img src="${images[0]}" alt="Slideshow" />` : '<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #6b7280;">Slideshow</div>'}
+      ${images.length > 1 ? `<div class="slideshow-dots">
+        ${images.map((_, index) => `<div class="slideshow-dot ${index === 0 ? 'active' : ''}"></div>`).join('')}
+      </div>` : ''}
     </div>`;
-        case 'accordion':
-          const sections = element.content.split('\n').filter((section: string) => section.trim()).map((section: string) => {
-            const [title, content] = section.split('|');
-            return { title: title?.trim() || 'Section', content: content?.trim() || 'Content' };
-          });
-          const accordionHTML = sections.map((section: any, index: number) => `
-        <div class="accordion-section">
-          <button class="accordion-header" onclick="toggleAccordion(${index})">
-            ${section.title}
-            <span>▼</span>
-          </button>
-          <div class="accordion-content" id="accordion-${index}">
-            ${section.content}
-          </div>
-        </div>`).join('');
-          return `    <div class="element accordion-container" style="${fullStyle}">${accordionHTML}
-    </div>`;
+
         case 'text':
           return `    <span class="element" style="${fullStyle}">${element.content}</span>`;
+
         case 'heading':
-          return `    <h2 class="element" style="${fullStyle}">${element.content}</h2>`;
+          return `    <h1 class="element" style="${fullStyle}">${element.content}</h1>`;
+
         case 'button':
           return `    <button class="element" style="${fullStyle}">${element.content}</button>`;
+
         case 'link':
-          return `    <a class="element" href="#" style="${fullStyle}">${element.content}</a>`;
+          return `    <a class="element" href="${element.linkTo?.value || '#'}" style="${fullStyle}">${element.content}</a>`;
+
         case 'image':
-          return `    <img class="element" src="${element.content}" alt="Image" style="${fullStyle}" />`;
+          return element.content ? 
+            `    <img class="element" src="${element.content}" alt="Image" style="${fullStyle}" />` : 
+            `    <div class="element" style="${fullStyle}; border: 2px dashed #d1d5db; display: flex; align-items: center; justify-content: center; color: #6b7280;">Image Placeholder</div>`;
+
         case 'video':
-          return `    <video class="element" src="${element.content}" controls style="${fullStyle}"></video>`;
+          const isYouTube = element.content && (element.content.includes('youtube.com') || element.content.includes('youtu.be'));
+          if (element.content && isYouTube) {
+            const videoIdMatch = element.content.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
+            const embedUrl = videoIdMatch ? `https://www.youtube.com/embed/${videoIdMatch[1]}` : element.content;
+            return `    <iframe class="element" src="${embedUrl}" style="${fullStyle}" frameborder="0" allowfullscreen></iframe>`;
+          }
+          return element.content ? 
+            `    <video class="element" src="${element.content}" controls style="${fullStyle}"></video>` :
+            `    <div class="element" style="${fullStyle}; background: #000; color: white; display: flex; align-items: center; justify-content: center;">Video Placeholder</div>`;
+
         case 'icon':
-          return `    <span class="element" style="${fullStyle}">${element.content}</span>`;
+          return `    <span class="element" style="${fullStyle}">${element.content || '⭐'}</span>`;
+
         case 'divider':
-          return `    <div class="element" style="${fullStyle}">
-      ${element.content ? `<span style="font-size: 12px; color: #888;">${element.content}</span>` : ''}
-      <hr style="width: 128px; margin-top: 4px;" />
-    </div>`;
+          return `    <hr class="element" style="${fullStyle}; border: none; height: 2px; background-color: ${element.styles.backgroundColor || '#e5e7eb'};" />`;
+
         case 'spacer':
-          return `    <div class="element" style="${fullStyle}"></div>`;
+          return `    <div class="element" style="${fullStyle}; background: transparent; border: 1px dashed #d1d5db; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 12px;">Spacer</div>`;
+
         case 'card':
-          return `    <div class="element" style="${fullStyle}">${element.content}</div>`;
+          return `    <div class="element element-card" style="${fullStyle}">
+      <div style="padding: 16px;">${element.content}</div>
+    </div>`;
+
         case 'list':
           const listItems = element.content.split('\n').filter((item: string) => item.trim()).map((item: string) => `<li>${item.trim()}</li>`).join('');
           return `    <ul class="element" style="${fullStyle}">${listItems}</ul>`;
+
         case 'quote':
           return `    <blockquote class="element" style="${fullStyle}">"${element.content}"</blockquote>`;
+
         default:
           return `    <div class="element" style="${fullStyle}">${element.content}</div>`;
       }
@@ -215,8 +380,8 @@ ${elementsHTML}
     const script = `
     <script>
       function toggleAccordion(index) {
-        const content = document.getElementById('accordion-' + index);
-        content.classList.toggle('active');
+        const content = document.getElementById('content-' + index);
+        content.classList.toggle('open');
       }
 
       function showPage(pageId) {
@@ -246,7 +411,7 @@ ${elementsHTML}
 </head>
 <body>
 ${navigationHTML}
-  <div style="padding-top: ${pages.length > 1 ? '80px' : '0'};">
+  <div style="padding-top: ${pages.length > 1 ? '80px' : '20px'};">
 ${pagesHTML}
   </div>
 ${script}
