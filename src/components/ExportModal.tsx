@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X, Download, Copy, Check } from 'lucide-react';
 import { Button } from './ui/button';
@@ -10,12 +9,15 @@ interface ExportModalProps {
 }
 
 type ExportFormat = 'html' | 'react' | 'vue' | 'nextjs';
+type ExportMode = 'current' | 'all' | 'separate';
 
 export const ExportModal: React.FC<ExportModalProps> = ({ pages, onClose }) => {
   const [copied, setCopied] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('html');
+  const [exportMode, setExportMode] = useState<ExportMode>('current');
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
 
-  const generateHTML = () => {
+  const generateSinglePageHTML = (page: Page) => {
     const styles = `
     <style>
       * {
@@ -26,64 +28,25 @@ export const ExportModal: React.FC<ExportModalProps> = ({ pages, onClose }) => {
       
       body {
         font-family: Arial, sans-serif;
-        position: relative;
-        min-height: 100vh;
         background: white;
+        overflow-x: auto;
       }
       
-      .element {
-        position: absolute;
-        user-select: none;
-      }
-
-      .page {
-        display: none;
+      .canvas {
         position: relative;
         width: 800px;
         height: 600px;
+        margin: 0 auto;
         background: white;
-        margin: 20px auto;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         border: 1px solid #e2e8f0;
         border-radius: 12px;
         overflow: hidden;
       }
-
-      .page.active {
-        display: block;
-      }
-
-      .navigation {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        background: white;
-        border-bottom: 1px solid #e2e8f0;
-        padding: 1rem;
-        z-index: 1000;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-      }
-
-      .nav-button {
-        background: linear-gradient(to right, #ea580c, #dc2626);
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        margin-right: 8px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 500;
-        transition: all 0.2s ease;
-      }
-
-      .nav-button:hover {
-        background: linear-gradient(to right, #dc2626, #b91c1c);
-        transform: translateY(-1px);
-      }
-
-      .nav-button.active {
-        background: linear-gradient(to right, #b91c1c, #991b1b);
+      
+      .element {
+        position: absolute;
+        user-select: none;
       }
 
       /* Navigation Element Styles */
@@ -243,7 +206,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ pages, onClose }) => {
 
       /* Responsive Design */
       @media (max-width: 768px) {
-        .page {
+        .canvas {
           width: 95%;
           height: auto;
           min-height: 600px;
@@ -260,10 +223,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({ pages, onClose }) => {
     </style>`;
 
     const generateElementHTML = (element: any) => {
-      // Convert React style object to CSS string
       const styleString = Object.entries(element.styles)
         .map(([key, value]) => {
-          // Convert camelCase to kebab-case
           const cssKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
           return `${cssKey}: ${value}`;
         })
@@ -362,42 +323,13 @@ export const ExportModal: React.FC<ExportModalProps> = ({ pages, onClose }) => {
       }
     };
 
-    // Generate HTML for all pages
-    const pagesHTML = pages.map((page, index) => {
-      const elementsHTML = page.elements.map(generateElementHTML).join('\n');
-      return `  <div class="page ${index === 0 ? 'active' : ''}" id="${page.id}">
-${elementsHTML}
-  </div>`;
-    }).join('\n');
-
-    const navigationHTML = pages.length > 1 ? `
-  <div class="navigation">
-    ${pages.map((page, index) => 
-      `<button class="nav-button ${index === 0 ? 'active' : ''}" onclick="showPage('${page.id}')">${page.name}</button>`
-    ).join('')}
-  </div>` : '';
+    const elementsHTML = page.elements.map(generateElementHTML).join('\n');
 
     const script = `
     <script>
       function toggleAccordion(index) {
         const content = document.getElementById('content-' + index);
         content.classList.toggle('open');
-      }
-
-      function showPage(pageId) {
-        // Hide all pages
-        document.querySelectorAll('.page').forEach(page => {
-          page.classList.remove('active');
-        });
-        
-        // Show selected page
-        document.getElementById(pageId).classList.add('active');
-        
-        // Update navigation buttons
-        document.querySelectorAll('.nav-button').forEach(btn => {
-          btn.classList.remove('active');
-        });
-        event.target.classList.add('active');
       }
     </script>`;
 
@@ -406,203 +338,305 @@ ${elementsHTML}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Website</title>
+    <title>${page.name}</title>
     ${styles}
 </head>
 <body>
-${navigationHTML}
-  <div style="padding-top: ${pages.length > 1 ? '80px' : '20px'};">
-${pagesHTML}
+  <div class="canvas">
+${elementsHTML}
   </div>
 ${script}
 </body>
 </html>`;
   };
 
-  const generateReact = () => {
-    // Generate components for all pages
-    const pagesJSX = pages.map((page, index) => {
-      const elementsJSX = page.elements.map(element => {
-        const styleObj = Object.entries(element.styles)
-          .map(([key, value]) => `    ${key}: '${value}'`)
-          .join(',\n');
-        
-        const positionStyle = `    position: 'absolute',\n    left: '${element.position.x}px',\n    top: '${element.position.y}px'`;
-        const fullStyle = `{\n${styleObj},\n${positionStyle}\n  }`;
+  const generateMultiPageHTML = () => {
+    // Only generate if user specifically wants all pages combined
+    const styles = `
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: Arial, sans-serif;
+        background: white;
+      }
+      
+      .page-container {
+        position: relative;
+        width: 800px;
+        height: 600px;
+        margin: 20px auto;
+        background: white;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      
+      .element {
+        position: absolute;
+        user-select: none;
+      }
 
-        switch (element.type) {
-          case 'text':
-            return `    <span style={${fullStyle}}>${element.content}</span>`;
-          case 'heading':
-            return `    <h2 style={${fullStyle}}>${element.content}</h2>`;
-          case 'button':
-            return `    <button style={${fullStyle}}>${element.content}</button>`;
-          default:
-            return `    <div style={${fullStyle}}>${element.content}</div>`;
+      .page-title {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        font-size: 18px;
+        font-weight: bold;
+        color: #374151;
+      }
+
+      /* Navigation Element Styles */
+      .element-navigation {
+        display: flex;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .element-navigation .nav-link {
+        padding: 12px 16px;
+        text-decoration: none;
+        color: #374151;
+        border-right: 1px solid #e2e8f0;
+        transition: background-color 0.2s ease;
+        font-weight: 500;
+      }
+
+      .element-navigation .nav-link:last-child {
+        border-right: none;
+      }
+
+      .element-navigation .nav-link:hover {
+        background: #f9fafb;
+      }
+
+      /* Accordion Element Styles */
+      .element-accordion {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .accordion-item {
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      .accordion-item:last-child {
+        border-bottom: none;
+      }
+
+      .accordion-header {
+        width: 100%;
+        padding: 12px 16px;
+        background: #f9fafb;
+        border: none;
+        text-align: left;
+        cursor: pointer;
+        font-weight: 500;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.2s ease;
+      }
+
+      .accordion-header:hover {
+        background: #f1f5f9;
+      }
+
+      .accordion-content {
+        padding: 12px 16px;
+        background: white;
+        display: none;
+      }
+
+      .accordion-content.open {
+        display: block;
+      }
+
+      /* Slideshow Styles */
+      .slideshow-container {
+        position: relative;
+        overflow: hidden;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+      }
+      
+      .slideshow-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .slideshow-dots {
+        position: absolute;
+        bottom: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 4px;
+      }
+
+      .slideshow-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        transition: background-color 0.2s ease;
+      }
+
+      .slideshow-dot.active {
+        background: white;
+      }
+
+      /* Button Styles */
+      .element button {
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .element button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      /* Image Styles */
+      .element img {
+        border-radius: 8px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Card Styles */
+      .element-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: box-shadow 0.2s ease;
+      }
+
+      .element-card:hover {
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+
+      /* List Styles */
+      .element ul {
+        list-style-type: disc;
+        list-style-position: inside;
+      }
+
+      .element ul li {
+        margin-bottom: 4px;
+        line-height: 1.5;
+      }
+
+      /* Quote Styles */
+      .element blockquote {
+        font-style: italic;
+        border-left: 4px solid #3b82f6;
+        padding-left: 16px;
+        color: #374151;
+        line-height: 1.6;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .page-container {
+          width: 95%;
+          height: auto;
+          min-height: 600px;
         }
+        
+        .element {
+          position: relative !important;
+          left: auto !important;
+          top: auto !important;
+          margin: 10px;
+          max-width: calc(100% - 20px);
+        }
+      }
+    </style>`;
+
+    const pagesHTML = pages.map((page, index) => {
+      const elementsHTML = page.elements.map(element => {
+        const styleString = Object.entries(element.styles)
+          .map(([key, value]) => {
+            const cssKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+            return `${cssKey}: ${value}`;
+          })
+          .join('; ');
+
+        const positionStyle = `left: ${element.position.x}px; top: ${element.position.y}px;`;
+        const fullStyle = `${styleString}; ${positionStyle}`;
+
+        return `    <div class="element" style="${fullStyle}">${element.content}</div>`;
       }).join('\n');
 
-      return `  const ${page.name.replace(/\s+/g, '')}Page = () => (
-    <div style={{ position: 'relative', minHeight: '100vh', fontFamily: 'Arial, sans-serif' }}>
-${elementsJSX}
-    </div>
-  );`;
-    }).join('\n\n');
+      return `  <div class="page-container">
+    <div class="page-title">${page.name}</div>
+${elementsHTML}
+  </div>`;
+    }).join('\n');
 
-    return `import React, { useState } from 'react';
-
-${pagesJSX}
-
-const MyWebsite = () => {
-  const [currentPage, setCurrentPage] = useState('${pages[0].name.replace(/\s+/g, '')}');
-
-  const renderPage = () => {
-    switch(currentPage) {
-      ${pages.map(page => `case '${page.name.replace(/\s+/g, '')}': return <${page.name.replace(/\s+/g, '')}Page />;`).join('\n      ')}
-      default: return <${pages[0].name.replace(/\s+/g, '')}Page />;
-    }
-  };
-
-  return (
-    <div>
-      ${pages.length > 1 ? `<nav style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0' }}>
-        ${pages.map(page => `<button 
-          onClick={() => setCurrentPage('${page.name.replace(/\s+/g, '')}')}
-          style={{
-            padding: '8px 16px',
-            marginRight: '8px',
-            background: currentPage === '${page.name.replace(/\s+/g, '')}' ? '#b91c1c' : '#ea580c',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          ${page.name}
-        </button>`).join('\n        ')}
-      </nav>` : ''}
-      {renderPage()}
-    </div>
-  );
-};
-
-export default MyWebsite;`;
-  };
-
-  const generateVue = () => {
-    return `<template>
-  <div>
-    ${pages.length > 1 ? `<nav style="padding: 1rem; border-bottom: 1px solid #e2e8f0;">
-      ${pages.map(page => `<button @click="currentPage = '${page.name.replace(/\s+/g, '')}'" 
-              :style="{ padding: '8px 16px', marginRight: '8px', background: currentPage === '${page.name.replace(/\s+/g, '')}' ? '#b91c1c' : '#ea580c', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }">
-        ${page.name}
-      </button>`).join('\n      ')}
-    </nav>` : ''}
-    
-    ${pages.map(page => `<div v-if="currentPage === '${page.name.replace(/\s+/g, '')}'" style="position: relative; min-height: 100vh; font-family: Arial, sans-serif;">
-      <!-- ${page.name} page with ${page.elements.length} elements -->
-      <div>Page: ${page.name}</div>
-    </div>`).join('\n    ')}
-  </div>
-</template>
-
-<script>
-export default {
-  name: 'MyWebsite',
-  data() {
-    return {
-      currentPage: '${pages[0].name.replace(/\s+/g, '')}'
-    }
-  }
-}
-</script>`;
-  };
-
-  const generateNextJS = () => {
-    return `import Head from 'next/head';
-import { useState } from 'react';
-
-export default function Home() {
-  const [currentPage, setCurrentPage] = useState('${pages[0].name.replace(/\s+/g, '')}');
-
-  return (
-    <>
-      <Head>
-        <title>My Website</title>
-        <meta name="description" content="Generated with Sketch2Ship Studio" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <div>
-        ${pages.length > 1 ? `<nav style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0' }}>
-          ${pages.map(page => `<button 
-            onClick={() => setCurrentPage('${page.name.replace(/\s+/g, '')}')}
-            style={{
-              padding: '8px 16px',
-              marginRight: '8px',
-              background: currentPage === '${page.name.replace(/\s+/g, '')}' ? '#b91c1c' : '#ea580c',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            ${page.name}
-          </button>`).join('\n          ')}
-        </nav>` : ''}
-        
-        <div style={{ position: 'relative', minHeight: '100vh', fontFamily: 'Arial, sans-serif' }}>
-          {/* Website with ${pages.length} pages exported from Sketch2Ship Studio */}
-          <h1>Website with {${pages.length}} pages</h1>
-        </div>
-      </div>
-    </>
-  );
-}`;
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Pages</title>
+    ${styles}
+</head>
+<body>
+${pagesHTML}
+</body>
+</html>`;
   };
 
   const getCode = () => {
+    const currentPage = pages[currentPageIndex];
+    
     switch (selectedFormat) {
       case 'html':
-        return generateHTML();
+        if (exportMode === 'current') {
+          return generateSinglePageHTML(currentPage);
+        } else if (exportMode === 'all') {
+          return generateMultiPageHTML();
+        } else {
+          return generateSinglePageHTML(currentPage);
+        }
       case 'react':
-        return generateReact();
+        return `// React component for ${currentPage.name}\nimport React from 'react';\n\nconst ${currentPage.name.replace(/\s+/g, '')}Page = () => {\n  return (\n    <div style={{ position: 'relative', width: '800px', height: '600px', margin: '0 auto' }}>\n      {/* Page content for ${currentPage.name} */}\n    </div>\n  );\n};\n\nexport default ${currentPage.name.replace(/\s+/g, '')}Page;`;
       case 'vue':
-        return generateVue();
+        return `<!-- Vue component for ${currentPage.name} -->\n<template>\n  <div style="position: relative; width: 800px; height: 600px; margin: 0 auto;">\n    <!-- Page content for ${currentPage.name} -->\n  </div>\n</template>\n\n<script>\nexport default {\n  name: '${currentPage.name.replace(/\s+/g, '')}Page'\n}\n</script>`;
       case 'nextjs':
-        return generateNextJS();
+        return `// Next.js page for ${currentPage.name}\nexport default function ${currentPage.name.replace(/\s+/g, '')}Page() {\n  return (\n    <div style={{ position: 'relative', width: '800px', height: '600px', margin: '0 auto' }}>\n      {/* Page content for ${currentPage.name} */}\n    </div>\n  );\n}`;
       default:
-        return generateHTML();
-    }
-  };
-
-  const getFileExtension = () => {
-    switch (selectedFormat) {
-      case 'html':
-        return '.html';
-      case 'react':
-        return '.jsx';
-      case 'vue':
-        return '.vue';
-      case 'nextjs':
-        return '.js';
-      default:
-        return '.html';
+        return generateSinglePageHTML(currentPage);
     }
   };
 
   const getFileName = () => {
+    const currentPage = pages[currentPageIndex];
+    const pageName = currentPage.name.toLowerCase().replace(/\s+/g, '-');
+    
     switch (selectedFormat) {
       case 'html':
-        return 'website.html';
+        return exportMode === 'all' ? 'all-pages.html' : `${pageName}.html`;
       case 'react':
-        return 'MyWebsite.jsx';
+        return `${currentPage.name.replace(/\s+/g, '')}Page.jsx`;
       case 'vue':
-        return 'MyComponent.vue';
+        return `${currentPage.name.replace(/\s+/g, '')}Page.vue`;
       case 'nextjs':
-        return 'index.js';
+        return `${pageName}.js`;
       default:
-        return 'website.html';
+        return `${pageName}.html`;
     }
   };
 
@@ -631,10 +665,16 @@ export default function Home() {
   };
 
   const formats = [
-    { id: 'html', label: 'HTML', description: 'Complete multi-page HTML website' },
-    { id: 'react', label: 'React', description: 'React multi-page component' },
-    { id: 'vue', label: 'Vue.js', description: 'Vue multi-page component' },
-    { id: 'nextjs', label: 'Next.js', description: 'Next.js multi-page application' },
+    { id: 'html', label: 'HTML', description: 'Complete HTML page' },
+    { id: 'react', label: 'React', description: 'React component' },
+    { id: 'vue', label: 'Vue.js', description: 'Vue component' },
+    { id: 'nextjs', label: 'Next.js', description: 'Next.js page' },
+  ];
+
+  const exportModes = [
+    { id: 'current', label: 'Current Page', description: 'Export only the selected page' },
+    { id: 'all', label: 'All Pages Combined', description: 'Export all pages in one file' },
+    { id: 'separate', label: 'Separate Files', description: 'Export each page separately' },
   ];
 
   return (
@@ -642,8 +682,10 @@ export default function Home() {
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
           <div>
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Export Complete Website</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Exporting {pages.length} page{pages.length !== 1 ? 's' : ''}</p>
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Export Pages</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              {exportMode === 'current' ? `Exporting: ${pages[currentPageIndex].name}` : `Exporting ${pages.length} page${pages.length !== 1 ? 's' : ''}`}
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -653,23 +695,61 @@ export default function Home() {
           </button>
         </div>
         
-        <div className="flex items-center gap-4 p-6 border-b bg-slate-50 dark:bg-slate-800/50">
-          <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Export Format:</span>
-          <div className="flex gap-2 flex-wrap">
-            {formats.map((format) => (
-              <button
-                key={format.id}
-                onClick={() => setSelectedFormat(format.id as ExportFormat)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  selectedFormat === format.id
-                    ? 'bg-orange-500 text-white shadow-md'
-                    : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600'
-                }`}
-              >
-                {format.label}
-              </button>
-            ))}
+        <div className="flex flex-col gap-4 p-6 border-b bg-slate-50 dark:bg-slate-800/50">
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Export Format:</span>
+            <div className="flex gap-2 flex-wrap">
+              {formats.map((format) => (
+                <button
+                  key={format.id}
+                  onClick={() => setSelectedFormat(format.id as ExportFormat)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    selectedFormat === format.id
+                      ? 'bg-orange-500 text-white shadow-md'
+                      : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600'
+                  }`}
+                >
+                  {format.label}
+                </button>
+              ))}
+            </div>
           </div>
+
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Export Mode:</span>
+            <div className="flex gap-2 flex-wrap">
+              {exportModes.map((mode) => (
+                <button
+                  key={mode.id}
+                  onClick={() => setExportMode(mode.id as ExportMode)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    exportMode === mode.id
+                      ? 'bg-blue-500 text-white shadow-md'
+                      : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600'
+                  }`}
+                >
+                  {mode.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {exportMode === 'current' && pages.length > 1 && (
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Select Page:</span>
+              <select
+                value={currentPageIndex}
+                onChange={(e) => setCurrentPageIndex(parseInt(e.target.value))}
+                className="px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
+              >
+                {pages.map((page, index) => (
+                  <option key={page.id} value={index}>
+                    {page.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
         
         <div className="flex-1 p-6 overflow-hidden">
@@ -683,7 +763,7 @@ export default function Home() {
         <div className="flex items-center justify-between p-6 border-t bg-slate-50 dark:bg-slate-800/50">
           <div>
             <p className="text-sm text-slate-600 dark:text-slate-300">
-              {formats.find(f => f.id === selectedFormat)?.description}
+              {formats.find(f => f.id === selectedFormat)?.description} - {exportModes.find(m => m.id === exportMode)?.description}
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Copy the code above or download as {getFileName()}
